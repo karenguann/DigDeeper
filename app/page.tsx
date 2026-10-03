@@ -27,6 +27,7 @@ export default function Page() {
   const [token, setToken] = useState<string | null>(null);
   const [view, setView] = useState<RoomView | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [rejection, setRejection] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [clockOffset, setClockOffset] = useState(0);
   const [now, setNow] = useState(() => Date.now());
@@ -142,11 +143,16 @@ export default function Page() {
     }
   }, [code, token]);
 
+  useEffect(() => {
+    setRejection(null);
+  }, [view?.status, view?.roundIndex]);
+
   async function post(path: string, body: Record<string, unknown>) {
     if (!code || !token) return;
     const stamp = ++epoch.current;
     setBusy(true);
     setError(null);
+    setRejection(null);
     try {
       const response = await fetch(path, {
         method: "POST",
@@ -156,6 +162,10 @@ export default function Page() {
       const data: unknown = await response.json();
       if (!response.ok || !data || typeof data !== "object" || !("status" in data)) {
         const message = data && typeof data === "object" && "error" in data ? String(data.error) : "The shaft collapsed.";
+        if (response.status === 400 && message.startsWith("Invalid guess")) {
+          setRejection(message);
+          return;
+        }
         throw new Error(message);
       }
       if (stamp !== epoch.current) return;
@@ -239,6 +249,7 @@ export default function Page() {
             secondsLeft={secondsLeft}
             fuseTotal={fuseTotal}
             busy={busy}
+            rejection={rejection}
             onGuess={(guess) => void post(`/api/rooms/${view.code}/guess`, { guess })}
           />
         )}

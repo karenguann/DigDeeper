@@ -34,6 +34,7 @@ type RoundRow = {
   bank_json: string | null;
   reasoning: string | null;
   guess: string | null;
+  attempts_json: string | null;
   outcome: Outcome | null;
   rarity: number | null;
   gem_type: string | null;
@@ -49,6 +50,7 @@ type RoundRecord = {
   bank: BankWord[] | null;
   reasoning: string | null;
   guess: string | null;
+  attempts: string[];
   outcome: Outcome | null;
   rarity: number | null;
   gemType: string | null;
@@ -108,6 +110,7 @@ function getDb() {
         matched_bank_word TEXT,
         matched_tier INTEGER,
         matched_canonical TEXT,
+        attempts_json TEXT,
         PRIMARY KEY (room_code, round_index)
       );
     `);
@@ -120,6 +123,14 @@ function getDb() {
       globalDb.__digDb.exec("ALTER TABLE rooms ADD COLUMN bank_ends_at INTEGER");
     }
     flagged.__digBankClock = true;
+  }
+  const attemptsFlag = globalThis as unknown as { __digAttempts?: boolean };
+  if (!attemptsFlag.__digAttempts) {
+    const columns = globalDb.__digDb.prepare("PRAGMA table_info(rounds)").all() as { name: string }[];
+    if (!columns.some((column) => column.name === "attempts_json")) {
+      globalDb.__digDb.exec("ALTER TABLE rounds ADD COLUMN attempts_json TEXT");
+    }
+    attemptsFlag.__digAttempts = true;
   }
   return globalDb.__digDb;
 }
@@ -148,12 +159,26 @@ function makeCode() {
   return code;
 }
 
+function readAttempts(json: string | null): string[] {
+  if (!json) return [];
+  const parsed: unknown = JSON.parse(json);
+  if (!Array.isArray(parsed)) return [];
+  return parsed.filter((entry): entry is string => typeof entry === "string");
+}
+
+function appendAttempt(code: string, roundIndex: number, attempts: string[], guess: string) {
+  getDb()
+    .prepare("UPDATE rounds SET attempts_json = ? WHERE room_code = ? AND round_index = ?")
+    .run(JSON.stringify([...attempts, guess]), code, roundIndex);
+}
+
 function mapRound(row: RoundRow): RoundRecord {
   return {
     roundIndex: row.round_index,
     bank: row.bank_json ? (JSON.parse(row.bank_json) as BankWord[]) : null,
     reasoning: row.reasoning,
     guess: row.guess,
+    attempts: readAttempts(row.attempts_json),
     outcome: row.outcome,
     rarity: row.rarity,
     gemType: row.gem_type,
@@ -235,11 +260,15 @@ function parseReasoning(reasoning: unknown): string | null {
   return trimmed;
 }
 
-function resolveRound(room: RoomRecord, guess: string | null) {
+function judgeGuess(room: RoomRecord, guess: string) {
   const round = room.rounds[room.roundIndex];
   if (!round?.bank) throw new GameError(500, "The bank is missing.");
   const prompt = promptsForDayIndex(room.dayIndex)[room.roundIndex];
-  const result = scoreGuess(guess, round.bank, prompt.answers);
+  return scoreGuess(guess, round.bank, prompt.answers);
+}
+
+function resolveRound(room: RoomRecord, guess: string | null) {
+  const result = judgeGuess(room, guess ?? "");
   getDb()
     .prepare(
       `UPDATE rounds SET
@@ -323,6 +352,7 @@ function toView(room: RoomRecord, token: string | null): RoomView {
         bank: showBank ? round.bank : null,
         reasoning: resolved || role === "geologist" ? round.reasoning : null,
         guess: resolved || role === "digger" ? round.guess : null,
+        attempts: role === "geologist" ? round.attempts : null,
         outcome: round.outcome,
         rarity: resolved ? round.rarity : null,
         gemType: resolved ? round.gemType : null,
@@ -407,20 +437,32 @@ export function lockBank(
 }
 
 export function submitGuess(code: string, token: string, guess: unknown): RoomView {
-  return transaction(() => {
+  const result = transaction(() => {
     const room = requireRoom(code);
     assertRole(room, token, "digger");
     expireIfNeeded(room);
     const fresh = readRoom(room.code)!;
     if (fresh.status !== "digging") {
-      if (fresh.status === "reveal" || fresh.status === "summary") return toView(fresh, token);
+      if (fresh.status === "reveal" || fresh.status === "summary") return { invalid: false, view: toView(fresh, token) };
       throw new GameError(400, "The digger is not in the shaft.");
     }
     if (typeof guess !== "string" || !guess.trim()) throw new GameError(400, "Type a guess.");
-    if (fresh.digEndsAt !== null && Date.now() > fresh.digEndsAt) resolveRound(fresh, null);
-    else resolveRound(fresh, guess.trim());
-    return toView(readRoom(fresh.code)!, token);
+    const trimmed = guess.trim();
+    const round = fresh.rounds[fresh.roundIndex];
+    let invalid = false;
+    if (fresh.digEndsAt !== null && Date.now() > fresh.digEndsAt) {
+      resolveRound(fresh, null);
+    } else if (judgeGuess(fresh, trimmed).outcome === "bedrock") {
+      appendAttempt(fresh.code, fresh.roundIndex, round?.attempts ?? [], trimmed);
+      invalid = true;
+    } else {
+      appendAttempt(fresh.code, fresh.roundIndex, round?.attempts ?? [], trimmed);
+      resolveRound(fresh, trimmed);
+    }
+    return { invalid, view: toView(readRoom(fresh.code)!, token) };
   });
+  if (result.invalid) throw new GameError(400, "Invalid guess. Try again.");
+  return result.view;
 }
 
 export function advance(code: string, token: string): RoomView {

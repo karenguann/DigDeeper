@@ -1,3 +1,4 @@
+import { AttemptList } from "@/components/AttemptList";
 import type { RoundView } from "@/lib/types";
 
 export function BankList({ round }: { round: RoundView }) {
@@ -15,6 +16,7 @@ export function BankList({ round }: { round: RoundView }) {
           ))}
         </ul>
       )}
+      <AttemptList attempts={round.attempts} />
       {round.reasoning ? <p className="debrief">Debrief: {round.reasoning}</p> : null}
     </div>
   );

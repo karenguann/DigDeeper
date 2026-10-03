@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { AttemptList } from "@/components/AttemptList";
 import { Fuse } from "@/components/Fuse";
 import type { RoomView } from "@/lib/types";
 
@@ -62,8 +63,9 @@ export function GeologistScreen({
           <span>Shaft {view.roundIndex + 1} / 5</span>
         </div>
         <p className="prompt" id="prompt-text">{round?.prompt}</p>
-        <p className="hint">The digger is in the shaft. Their guess stays hidden until the fuse dies.</p>
+        <p className="hint">Guesses show up here as the digger tries them.</p>
         <Fuse secondsLeft={secondsLeft} total={fuseTotal} />
+        <AttemptList attempts={round?.attempts ?? []} empty="No guesses yet." />
         <ul className="chips">
           {round?.bank?.map((entry) => (
             <li key={entry.word}>{entry.word}</li>

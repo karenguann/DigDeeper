@@ -20,6 +20,7 @@ export type RoundView = {
   bank: BankWord[] | null;
   reasoning: string | null;
   guess: string | null;
+  attempts: string[] | null;
   outcome: Outcome | null;
   rarity: number | null;
   gemType: string | null;

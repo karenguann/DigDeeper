@@ -180,7 +180,13 @@ h1 {
   transform: translate(-50%, -50%);
 }
 
-.miner { z-index: 3; left: 42%; }
+.shaft-icon { left: 36%; }
+
+.miner {
+  z-index: 3;
+  left: 70%;
+  top: 58%;
+}
 
 .panel {
   background: #1a120b;
@@ -277,21 +283,6 @@ h1 {
   color: var(--gold);
 }
 
-.sparkle { animation: sparkle 0.7s steps(2, end) infinite; }
-.blast { animation: blast 0.45s steps(3, end) infinite; }
-.dink { animation: dink 0.4s steps(2, end) infinite; }
-
-@keyframes sparkle {
-  50% { transform: translateY(-6px) scale(1.08); }
-}
-
-@keyframes blast {
-  50% { transform: scale(1.18); filter: brightness(1.4); }
-}
-
-@keyframes dink {
-  50% { transform: rotate(-12deg) translateY(3px); }
-}
 
 .chips {
   display: flex;
@@ -313,6 +304,22 @@ h1 {
 .chips li.hit, .word.hit {
   border-color: var(--ember);
   color: var(--gold);
+}
+
+.attempts {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.attempts li {
+  background: #1a120b;
+  border: 3px solid var(--wood-dark);
+  padding: 4px 6px;
+  font-size: 9px;
+  line-height: 1.5;
 }
 
 .cards {
@@ -378,6 +385,3 @@ code, .code {
   .panel { min-height: 0; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sparkle, .blast, .dink { animation: none; }
-}

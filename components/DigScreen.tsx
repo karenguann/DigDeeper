@@ -8,12 +8,14 @@ export function DigScreen({
   secondsLeft,
   fuseTotal,
   busy,
+  rejection,
   onGuess,
 }: {
   view: RoomView;
   secondsLeft: number | null;
   fuseTotal: number;
   busy: boolean;
+  rejection: string | null;
   onGuess: (guess: string) => void;
 }) {
   const round = view.rounds[view.roundIndex];
@@ -64,6 +66,7 @@ export function DigScreen({
               Dig
             </button>
           </form>
+          {rejection ? <p className="banner">{rejection}</p> : null}
         </>
       )}
     </>

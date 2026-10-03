@@ -4,6 +4,7 @@ import type { RoundView } from "@/lib/types";
 
 const MARKERS = [0, 100, 250, 500];
 const SCALE = 500;
+const SLOT_TOP = ["22%", "38%", "54%", "70%", "86%"];
 
 function depthTop(meters: number) {
   const pct = (Math.min(SCALE, Math.max(0, meters)) / SCALE) * 100;
@@ -11,22 +12,6 @@ function depthTop(meters: number) {
 }
 
 export function ShaftVisual({ totalDepth, rounds }: { totalDepth: number; rounds: RoundView[] }) {
-  const marks: { key: number; at: number; sprite: string; alt: string }[] = [];
-  let depth = 0;
-  rounds.forEach((round) => {
-    if (!round.outcome || round.depthGained === null) return;
-    const at = round.outcome === "gem" ? depth + round.depthGained : depth;
-    marks.push({
-      key: round.roundIndex,
-      at,
-      sprite: spriteForRound(round.outcome, round.gemType),
-      alt: round.outcome === "gem" ? (round.gemType ?? "Gem") : round.outcome,
-    });
-    depth += round.depthGained;
-  });
-
-  const minerTop = depthTop(totalDepth);
-
   return (
     <aside className="shaft" aria-label={`Shaft, depth ${totalDepth} meters`}>
       <div className="shaft-depth">{totalDepth}m</div>
@@ -35,16 +20,19 @@ export function ShaftVisual({ totalDepth, rounds }: { totalDepth: number; rounds
           {marker}m
         </span>
       ))}
-      {marks.map((mark, index) => (
-        <span
-          key={mark.key}
-          className="shaft-icon"
-          style={{ top: depthTop(mark.at), left: `${28 + (index % 3) * 14}%` }}
-        >
-          <PixelSprite name={mark.sprite} size={36} alt={mark.alt} />
-        </span>
-      ))}
-      <span className="miner" style={{ top: minerTop }}>
+      {rounds.map((round) => {
+        if (!round.outcome || round.depthGained === null) return null;
+        return (
+          <span key={round.roundIndex} className="shaft-icon" style={{ top: SLOT_TOP[round.roundIndex] }}>
+            <PixelSprite
+              name={spriteForRound(round.outcome, round.gemType)}
+              size={36}
+              alt={round.outcome === "gem" ? (round.gemType ?? "Gem") : round.outcome}
+            />
+          </span>
+        );
+      })}
+      <span className="miner">
         <PixelSprite name="miner" size={52} alt="Miner" />
       </span>
     </aside>
