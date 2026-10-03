@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 export async function POST() {
   try {
-    const { token, view } = createRoom();
+    const { token, view } = await createRoom();
     return json({ token, ...view });
   } catch (error) {
     return fail(error);

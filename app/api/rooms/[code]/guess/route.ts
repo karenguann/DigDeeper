@@ -8,7 +8,7 @@ export async function POST(request: Request, context: { params: Promise<{ code: 
   try {
     const { code } = await context.params;
     const body = await readJson(request);
-    return json(submitGuess(code, tokenFrom(request, body), body.guess));
+    return json(await submitGuess(code, tokenFrom(request, body), body.guess));
   } catch (error) {
     return fail(error);
   }

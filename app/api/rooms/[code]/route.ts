@@ -8,7 +8,7 @@ export async function GET(request: Request, context: { params: Promise<{ code: s
   try {
     const { code } = await context.params;
     const token = new URL(request.url).searchParams.get("token") ?? request.headers.get("x-player-token");
-    return json(getRoom(code, token));
+    return json(await getRoom(code, token));
   } catch (error) {
     return fail(error);
   }

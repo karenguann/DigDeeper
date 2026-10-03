@@ -2,14 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
-  serverExternalPackages: [],
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals = config.externals || [];
-      config.externals.push("node:sqlite");
-    }
-    return config;
-  },
+  serverExternalPackages: ["node:sqlite"],
 };
 
 export default nextConfig;

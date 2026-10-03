@@ -8,7 +8,7 @@ export async function POST(request: Request, context: { params: Promise<{ code: 
   try {
     const { code } = await context.params;
     const body = await readJson(request);
-    return json(lockBank(code, tokenFrom(request, body), body.words, body.reasoning, body.commit !== false));
+    return json(await lockBank(code, tokenFrom(request, body), body.words, body.reasoning, body.commit !== false));
   } catch (error) {
     return fail(error);
   }
