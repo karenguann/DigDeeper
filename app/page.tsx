@@ -223,7 +223,13 @@ export default function Page() {
   } else if (view.status === "lobby") {
     body = (
       <PlayFrame view={view}>
-        <LobbyScreen code={view.code} />
+        <LobbyScreen
+          code={view.code}
+          role={view.role}
+          geologistJoined={view.geologistJoined}
+          busy={busy}
+          onStart={() => void post(`/api/rooms/${view.code}/start`, {})}
+        />
       </PlayFrame>
     );
   } else {

@@ -222,11 +222,22 @@ export async function joinGeologist(code: string): Promise<{ token: string; view
   const view = await mutateRoom(code, (room) => {
     if (room.geologistToken) throw new GameError(409, "A geologist is already in this shaft.");
     room.geologistToken = token;
+    return toView(room, token);
+  });
+  return { token, view };
+}
+
+export async function startGame(code: string, token: string): Promise<RoomView> {
+  return mutateRoom(code, (room) => {
+    if (!roleFor(room, token)) throw new GameError(403, "This token does not belong to the expedition.");
+    if (room.status !== "lobby") return toView(room, token);
+    if (!room.diggerToken || !room.geologistToken) {
+      throw new GameError(400, "Wait for both players before starting.");
+    }
     room.status = "bank";
     room.bankEndsAt = Date.now() + BANK_MS;
     return toView(room, token);
   });
-  return { token, view };
 }
 
 export async function getRoom(code: string, token: string | null): Promise<RoomView> {
