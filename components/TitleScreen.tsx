@@ -29,8 +29,13 @@ export function TitleScreen({
         </h1>
         <PixelSprite name="diamond" size={72} alt="" />
       </div>
-      <p className="lede">Dig Deeper #{day}. Five shafts. Twenty-five seconds each.</p>
-      <p className="hint">The geologist buries 20 bombs. The digger tries to miss every one.</p>
+      <p className="lede">
+        Dig Deeper #{day}. Five prompts. Twenty-five seconds each. Rarer answers
+        get more points.
+      </p>
+      <p className="hint">
+        The geologist buries 20 bombs. The digger tries to miss every one.
+      </p>
       {error ? <p className="banner">{error}</p> : null}
       {picking ? (
         <form
@@ -51,19 +56,37 @@ export function TitleScreen({
               onChange={(event) => setCode(event.target.value.toUpperCase())}
             />
           </label>
-          <button className="pixel-btn" type="submit" disabled={busy || code.trim().length < 4}>
+          <button
+            className="pixel-btn"
+            type="submit"
+            disabled={busy || code.trim().length < 4}
+          >
             Join as geologist
           </button>
-          <button className="pixel-btn-ghost" type="button" onClick={() => setPicking(false)}>
+          <button
+            className="pixel-btn-ghost"
+            type="button"
+            onClick={() => setPicking(false)}
+          >
             Back
           </button>
         </form>
       ) : (
         <div className="role-row">
-          <button className="pixel-btn" type="button" disabled={busy} onClick={onCreate}>
+          <button
+            className="pixel-btn"
+            type="button"
+            disabled={busy}
+            onClick={onCreate}
+          >
             I am the Digger
           </button>
-          <button className="pixel-btn-ghost" type="button" disabled={busy} onClick={() => setPicking(true)}>
+          <button
+            className="pixel-btn-ghost"
+            type="button"
+            disabled={busy}
+            onClick={() => setPicking(true)}
+          >
             I am the Geologist
           </button>
         </div>

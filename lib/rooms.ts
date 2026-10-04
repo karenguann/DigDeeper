@@ -51,6 +51,7 @@ function emptyRound(roundIndex: number) {
     gemType: null,
     gemEmoji: null,
     depthGained: null,
+    trapScore: null,
     matchedBankWord: null,
     matchedCanonical: null,
   };
@@ -125,6 +126,7 @@ function resolveRound(room: RoomRecord, guess: string | null) {
   round.gemType = result.gemType;
   round.gemEmoji = result.gemEmoji;
   round.depthGained = result.depthGained;
+  round.trapScore = result.trapScore;
   round.matchedBankWord = result.matchedBankWord;
   round.matchedCanonical = result.matchedCanonical;
   room.status = "reveal";
@@ -169,6 +171,7 @@ function promptText(room: RoomRecord, role: Role | null, index: number): string 
 function toView(room: RoomRecord, token: string | null): RoomView {
   const role = roleFor(room, token);
   const totalDepth = room.rounds.reduce((sum, round) => sum + (round.depthGained ?? 0), 0);
+  const totalTrap = room.rounds.reduce((sum, round) => sum + (round.trapScore ?? 0), 0);
   return {
     code: room.code,
     dayIndex: room.dayIndex,
@@ -183,6 +186,7 @@ function toView(room: RoomRecord, token: string | null): RoomView {
     digSeconds: digSecondsOf(room),
     serverNow: Date.now(),
     totalDepth,
+    totalTrap,
     rounds: room.rounds.map((round, index) => {
       const resolved = round.outcome !== null;
       const showBank = resolved || (role === "geologist" && round.bank !== null);
@@ -198,6 +202,7 @@ function toView(room: RoomRecord, token: string | null): RoomView {
         gemType: resolved ? round.gemType : null,
         gemEmoji: resolved ? round.gemEmoji : null,
         depthGained: resolved ? round.depthGained : null,
+        trapScore: resolved ? (round.trapScore ?? 0) : null,
         matchedBankWord: resolved ? round.matchedBankWord : null,
         matchedCanonical: resolved ? round.matchedCanonical : null,
       };

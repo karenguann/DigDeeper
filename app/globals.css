@@ -396,10 +396,22 @@ h1 {
 
 .card p { margin: 6px 0 0; }
 
-.depth-total {
-  font-size: clamp(20px, 4vw, 32px);
+.scoreboard {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
   color: var(--gold);
-  margin: 8px 0 16px;
+}
+
+.verdict {
+  margin: 8px 0 4px;
+  color: var(--gold);
+  font-size: clamp(18px, 4vw, 28px);
+}
+
+.score-line {
+  margin: 0 0 16px;
 }
 
 .actions {

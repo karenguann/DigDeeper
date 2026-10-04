@@ -3,7 +3,7 @@ import { useState } from "react";
 import { BankList } from "@/components/BankList";
 import { PixelSprite } from "@/components/PixelSprite";
 import { spriteForRound } from "@/lib/gems";
-import { formatShare, roundEmoji } from "@/lib/share";
+import { formatShare, winnerOf } from "@/lib/share";
 import type { RoomView } from "@/lib/types";
 
 export function ExpeditionSummary({ view }: { view: RoomView }) {
@@ -13,9 +13,11 @@ export function ExpeditionSummary({ view }: { view: RoomView }) {
 
   async function share() {
     const text = formatShare(
+      view.role,
       view.dayIndex,
       view.totalDepth,
-      view.rounds.map((round) => roundEmoji(round)),
+      view.totalTrap,
+      view.rounds,
       window.location.host,
     );
     setShareText(text);
@@ -46,13 +48,17 @@ export function ExpeditionSummary({ view }: { view: RoomView }) {
     setCopied(wrote);
   }
 
+  const winner = winnerOf(view.totalDepth, view.totalTrap);
+  const verdict = winner === "Tie" ? "It's a tie" : `${winner} wins`;
+
   return (
     <>
       <div className="panel-head">
         <span>Expedition log</span>
         <span>Dig Deeper #{view.dayIndex}</span>
       </div>
-      <p className="depth-total">Depth reached: {view.totalDepth}m</p>
+      <p className="verdict" id="winner">{verdict}</p>
+      <p className="score-line">Digger {view.totalDepth} · Geologist {view.totalTrap}</p>
       <div className="cards">
         {view.rounds.map((round) => {
           const expanded = open === round.roundIndex;
@@ -74,10 +80,10 @@ export function ExpeditionSummary({ view }: { view: RoomView }) {
                     <br />
                     <span className="muted">
                       {round.outcome === "gem"
-                        ? `${round.gemType} +${round.depthGained}m`
+                        ? `${round.gemType} +${round.depthGained}`
                         : round.outcome === "bomb"
-                          ? "Bomb +0m"
-                          : "Bedrock +0m"}
+                          ? `Bomb +${round.trapScore}`
+                          : "Bedrock +0"}
                     </span>
                   </span>
                 </span>

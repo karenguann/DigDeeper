@@ -110,10 +110,11 @@ export function LobbyScreen({
               <li>Five shafts. Each one has its own prompt.</li>
               <li>After Start, the Geologist has {formatSeconds(bankSeconds)} and 20 slots. Blank slots are not bombs. They can lock the bank early.</li>
               <li>Then the Digger has {formatSeconds(digSeconds)}.</li>
-              <li>A guess that matches the bank, including another spelling of the same answer, is a bomb. +0 m.</li>
-              <li>A real answer that is not in the bank is a gem. The meters equal its rarity, from 1 to 100.</li>
+              <li>A guess that matches the bank, including another spelling of the same answer, is a bomb. The geologist scores 100 minus that answer's rarity. A bank word that is not a real answer scores 50.</li>
+              <li>A real answer that is not in the bank is a gem. The digger scores its rarity, from 1 to 100.</li>
+              <li>After five shafts, the higher score wins.</li>
               <li>A guess that is not a real answer is invalid. The Digger can try again while time is left.</li>
-              <li>If a fuse runs out, that shaft scores 0 m.</li>
+              <li>If a fuse runs out, that shaft scores 0 for both.</li>
             </ol>
             <button className="pixel-btn" type="button" onClick={() => setPanel(null)}>
               Close

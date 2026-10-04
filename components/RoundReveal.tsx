@@ -48,12 +48,12 @@ export function RoundReveal({
           : "Fuse burned out";
   const detail =
     round?.outcome === "gem"
-      ? `${round.matchedCanonical} · +${round.depthGained}m`
+      ? `${round.matchedCanonical} · Digger +${round.depthGained}`
       : round?.outcome === "bomb"
-        ? `${round.matchedBankWord} was already in the bank`
+        ? `${round.matchedBankWord} was already in the bank · Geologist +${round.trapScore}`
         : round?.guess
-          ? `"${round.guess}" did not cut the rock · +0m`
-          : "No guess landed · +0m";
+          ? `"${round.guess}" did not cut the rock · +0`
+          : "No guess landed · +0";
 
   return (
     <>

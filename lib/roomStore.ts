@@ -17,6 +17,7 @@ export type RoundRecord = {
   gemType: string | null;
   gemEmoji: string | null;
   depthGained: number | null;
+  trapScore?: number | null;
   matchedBankWord: string | null;
   matchedCanonical: string | null;
 };
@@ -177,6 +178,9 @@ async function openSqlite(): Promise<SqliteDb> {
   if (!roundColumns.some((column) => column.name === "attempts_json")) {
     database.exec("ALTER TABLE rounds ADD COLUMN attempts_json TEXT");
   }
+  if (!roundColumns.some((column) => column.name === "trap_score")) {
+    database.exec("ALTER TABLE rounds ADD COLUMN trap_score INTEGER");
+  }
   return database;
 }
 
@@ -212,6 +216,7 @@ type RoundRow = {
   gem_type: string | null;
   gem_emoji: string | null;
   depth_gained: number | null;
+  trap_score: number | null;
   matched_bank_word: string | null;
   matched_canonical: string | null;
 };
@@ -240,6 +245,7 @@ function rowToRoom(row: RoomRow, rounds: RoundRow[]): RoomRecord {
       gemType: round.gem_type,
       gemEmoji: round.gem_emoji,
       depthGained: round.depth_gained,
+      trapScore: round.trap_score,
       matchedBankWord: round.matched_bank_word,
       matchedCanonical: round.matched_canonical,
     })),
@@ -286,8 +292,8 @@ function sqliteStore(): RoomStore {
           );
         const insertRound = database.prepare(
           `INSERT INTO rounds (
-            room_code, round_index, bank_json, reasoning, guess, attempts_json, outcome, rarity, gem_type, gem_emoji, depth_gained, matched_bank_word, matched_canonical
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            room_code, round_index, bank_json, reasoning, guess, attempts_json, outcome, rarity, gem_type, gem_emoji, depth_gained, trap_score, matched_bank_word, matched_canonical
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         );
         for (const round of room.rounds) {
           insertRound.run(
@@ -302,6 +308,7 @@ function sqliteStore(): RoomStore {
             round.gemType,
             round.gemEmoji,
             round.depthGained,
+            round.trapScore ?? null,
             round.matchedBankWord,
             round.matchedCanonical,
           );
@@ -346,7 +353,7 @@ function sqliteStore(): RoomStore {
               room.code,
             );
           const updateRound = database.prepare(
-            `UPDATE rounds SET bank_json = ?, reasoning = ?, guess = ?, attempts_json = ?, outcome = ?, rarity = ?, gem_type = ?, gem_emoji = ?, depth_gained = ?, matched_bank_word = ?, matched_canonical = ?
+            `UPDATE rounds SET bank_json = ?, reasoning = ?, guess = ?, attempts_json = ?, outcome = ?, rarity = ?, gem_type = ?, gem_emoji = ?, depth_gained = ?, trap_score = ?, matched_bank_word = ?, matched_canonical = ?
              WHERE room_code = ? AND round_index = ?`,
           );
           for (const round of room.rounds) {
@@ -360,6 +367,7 @@ function sqliteStore(): RoomStore {
               round.gemType,
               round.gemEmoji,
               round.depthGained,
+              round.trapScore ?? null,
               round.matchedBankWord,
               round.matchedCanonical,
               room.code,

@@ -26,6 +26,7 @@ export type RoundView = {
   gemType: string | null;
   gemEmoji: string | null;
   depthGained: number | null;
+  trapScore: number | null;
   matchedBankWord: string | null;
   matchedCanonical: string | null;
 };
@@ -44,6 +45,7 @@ export type RoomView = {
   digSeconds: number;
   serverNow: number;
   totalDepth: number;
+  totalTrap: number;
   rounds: RoundView[];
 };
 

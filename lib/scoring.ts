@@ -20,6 +20,7 @@ export type ScoreResult = {
   gemType: GemType | null;
   gemEmoji: string;
   depthGained: number;
+  trapScore: number;
   matchedBankWord: string | null;
   matchedCanonical: string | null;
 };
@@ -34,6 +35,7 @@ const BEDROCK: ScoreResult = {
   gemType: null,
   gemEmoji: "🟫",
   depthGained: 0,
+  trapScore: 0,
   matchedBankWord: null,
   matchedCanonical: null,
 };
@@ -52,10 +54,11 @@ export function scoreGuess(guess: string | null, bank: BankWord[], answers: Answ
   if (bomb) {
     return {
       outcome: "bomb",
-      rarity: null,
+      rarity: answer?.rarity ?? null,
       gemType: null,
       gemEmoji: "💣",
       depthGained: 0,
+      trapScore: answer ? Math.max(0, 100 - answer.rarity) : 50,
       matchedBankWord: bomb.word,
       matchedCanonical: answer?.canonical ?? null,
     };
@@ -70,6 +73,7 @@ export function scoreGuess(guess: string | null, bank: BankWord[], answers: Answ
     gemType: gem.gemType,
     gemEmoji: gem.gemEmoji,
     depthGained: answer.rarity,
+    trapScore: 0,
     matchedBankWord: null,
     matchedCanonical: answer.canonical,
   };
