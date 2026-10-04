@@ -1,34 +1,49 @@
 import { useEffect, useState } from "react";
 
 import { PixelSprite } from "@/components/PixelSprite";
+import { formatSeconds } from "@/lib/duration";
 import type { Role } from "@/lib/types";
 
 export function LobbyScreen({
   code,
   role,
   geologistJoined,
+  bankSeconds,
+  digSeconds,
   busy,
   onStart,
+  onSaveLimits,
 }: {
   code: string;
   role: Role;
   geologistJoined: boolean;
+  bankSeconds: number;
+  digSeconds: number;
   busy: boolean;
   onStart: () => void;
+  onSaveLimits: (bankSeconds: number, digSeconds: number) => Promise<boolean>;
 }) {
   const [copied, setCopied] = useState(false);
-  const [instructionsOpen, setInstructionsOpen] = useState(true);
+  const [panel, setPanel] = useState<"instructions" | "settings" | null>("instructions");
+  const [bankInput, setBankInput] = useState(String(bankSeconds));
+  const [digInput, setDigInput] = useState(String(digSeconds));
   const link = typeof window === "undefined" ? "" : `${window.location.origin}/?room=${code}&role=geologist`;
   const digger = role === "digger";
 
   useEffect(() => {
-    if (!instructionsOpen) return;
+    if (!panel) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setInstructionsOpen(false);
+      if (event.key === "Escape") setPanel(null);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [instructionsOpen]);
+  }, [panel]);
+
+  function openSettings() {
+    setBankInput(String(bankSeconds));
+    setDigInput(String(digSeconds));
+    setPanel("settings");
+  }
 
   return (
     <div className="lobby">
@@ -36,6 +51,9 @@ export function LobbyScreen({
       <p className="muted">{digger ? "You are the Digger" : "You are the Geologist"}</p>
       <p>
         Room <span className="code" id="room-code">{code}</span>
+      </p>
+      <p className="hint" id="time-limits">
+        Geologist {formatSeconds(bankSeconds)} · Digger {formatSeconds(digSeconds)}
       </p>
       {geologistJoined ? (
         <p className="hint">Both of you are in the shaft. The clock stays still until someone clicks Start.</p>
@@ -65,11 +83,16 @@ export function LobbyScreen({
       ) : (
         <p className="muted">Waiting for the geologist</p>
       )}
-      <button className="pixel-btn-ghost" type="button" onClick={() => setInstructionsOpen(true)}>
-        Instructions
-      </button>
-      {instructionsOpen ? (
-        <div className="modal-back" onClick={() => setInstructionsOpen(false)}>
+      <div className="lobby-actions">
+        <button id="open-settings" className="pixel-btn-ghost" type="button" onClick={openSettings}>
+          Settings
+        </button>
+        <button className="pixel-btn-ghost" type="button" onClick={() => setPanel("instructions")}>
+          Instructions
+        </button>
+      </div>
+      {panel === "instructions" ? (
+        <div className="modal-back" onClick={() => setPanel(null)}>
           <div
             className="modal"
             role="dialog"
@@ -85,17 +108,74 @@ export function LobbyScreen({
             </p>
             <ol className="rules">
               <li>Five shafts. Each one has its own prompt.</li>
-              <li>After Start, the Geologist has one minute and 20 slots. Blank slots are not bombs. They can lock the bank early.</li>
-              <li>Then the Digger has 25 seconds.</li>
+              <li>After Start, the Geologist has {formatSeconds(bankSeconds)} and 20 slots. Blank slots are not bombs. They can lock the bank early.</li>
+              <li>Then the Digger has {formatSeconds(digSeconds)}.</li>
               <li>A guess that matches the bank, including another spelling of the same answer, is a bomb. +0 m.</li>
               <li>A real answer that is not in the bank is a gem. The meters equal its rarity, from 1 to 100.</li>
               <li>A guess that is not a real answer is invalid. The Digger can try again while time is left.</li>
               <li>If a fuse runs out, that shaft scores 0 m.</li>
             </ol>
-            <button className="pixel-btn" type="button" onClick={() => setInstructionsOpen(false)}>
+            <button className="pixel-btn" type="button" onClick={() => setPanel(null)}>
               Close
             </button>
           </div>
+        </div>
+      ) : null}
+      {panel === "settings" ? (
+        <div className="modal-back" onClick={() => setPanel(null)}>
+          <form
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-title"
+            onClick={(event) => event.stopPropagation()}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const nextBank = Number(bankInput);
+              const nextDig = Number(digInput);
+              if (!Number.isInteger(nextBank) || !Number.isInteger(nextDig)) return;
+              void onSaveLimits(nextBank, nextDig).then((saved) => {
+                if (saved) setPanel(null);
+              });
+            }}
+          >
+            <h2 id="settings-title">Time limits</h2>
+            <p className="hint">These clocks start when someone clicks Start. Both players share them.</p>
+            <label className="field" htmlFor="bank-seconds">
+              <span>Geologist, seconds</span>
+              <input
+                id="bank-seconds"
+                className="pixel-input"
+                type="number"
+                min={5}
+                max={600}
+                step={1}
+                value={bankInput}
+                onChange={(event) => setBankInput(event.target.value)}
+              />
+            </label>
+            <label className="field" htmlFor="dig-seconds">
+              <span>Digger, seconds</span>
+              <input
+                id="dig-seconds"
+                className="pixel-input"
+                type="number"
+                min={5}
+                max={600}
+                step={1}
+                value={digInput}
+                onChange={(event) => setDigInput(event.target.value)}
+              />
+            </label>
+            <div className="lobby-actions">
+              <button id="save-settings" className="pixel-btn" type="submit" disabled={busy}>
+                Save
+              </button>
+              <button className="pixel-btn-ghost" type="button" onClick={() => setPanel(null)}>
+                Close
+              </button>
+            </div>
+          </form>
         </div>
       ) : null}
     </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Fuse } from "@/components/Fuse";
+import { formatSeconds } from "@/lib/duration";
 import type { RoomView } from "@/lib/types";
 
 export function DigScreen({
@@ -35,7 +36,7 @@ export function DigScreen({
       {waiting ? (
         <>
           <p className="prompt">The geologist is burying bombs.</p>
-          <p className="hint">They have one minute. The prompt stays hidden until the bank locks.</p>
+          <p className="hint">They have {formatSeconds(view.bankSeconds)}. The prompt stays hidden until the bank locks.</p>
           <Fuse secondsLeft={secondsLeft} total={fuseTotal} />
         </>
       ) : (

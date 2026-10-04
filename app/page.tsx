@@ -127,16 +127,16 @@ export default function Page() {
   }, []);
 
   const deadline = view?.status === "digging" ? view.digEndsAt : view?.status === "bank" ? view.bankEndsAt : null;
-  const fuseTotal = view?.status === "bank" ? 60 : 25;
+  const fuseTotal = view?.status === "bank" ? view.bankSeconds : view?.digSeconds ?? 25;
   const secondsLeft = deadline ? Math.max(0, Math.ceil((deadline - (now + clockOffset)) / 1000)) : null;
 
-  const saveDraft = useCallback(async (words: string[], reasoning: string) => {
+  const saveDraft = useCallback(async (words: string[]) => {
     if (!code || !token) return;
     try {
       await fetch(`/api/rooms/${code}/bank`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, words, reasoning, commit: false }),
+        body: JSON.stringify({ token, words, commit: false }),
       });
     } catch {
       /* the lock or the server clock still seals the bank */
@@ -148,7 +148,7 @@ export default function Page() {
   }, [view?.status, view?.roundIndex]);
 
   async function post(path: string, body: Record<string, unknown>) {
-    if (!code || !token) return;
+    if (!code || !token) return false;
     const stamp = ++epoch.current;
     setBusy(true);
     setError(null);
@@ -164,14 +164,16 @@ export default function Page() {
         const message = data && typeof data === "object" && "error" in data ? String(data.error) : "The shaft collapsed.";
         if (response.status === 400 && message.startsWith("Invalid guess")) {
           setRejection(message);
-          return;
+          return false;
         }
         throw new Error(message);
       }
-      if (stamp !== epoch.current) return;
+      if (stamp !== epoch.current) return false;
       takeView(data as RoomView);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "The shaft collapsed.");
+      return false;
     } finally {
       setBusy(false);
     }
@@ -223,12 +225,16 @@ export default function Page() {
   } else if (view.status === "lobby") {
     body = (
       <PlayFrame view={view}>
+        {error ? <p className="banner">{error}</p> : null}
         <LobbyScreen
           code={view.code}
           role={view.role}
           geologistJoined={view.geologistJoined}
+          bankSeconds={view.bankSeconds}
+          digSeconds={view.digSeconds}
           busy={busy}
           onStart={() => void post(`/api/rooms/${view.code}/start`, {})}
+          onSaveLimits={(bankSeconds, digSeconds) => post(`/api/rooms/${view.code}/settings`, { bankSeconds, digSeconds })}
         />
       </PlayFrame>
     );
@@ -247,7 +253,7 @@ export default function Page() {
             fuseTotal={fuseTotal}
             busy={busy}
             onDraft={saveDraft}
-            onLock={(words, reasoning) => void post(`/api/rooms/${view.code}/bank`, { words, reasoning })}
+            onLock={(words) => void post(`/api/rooms/${view.code}/bank`, { words })}
           />
         ) : (
           <DigScreen

@@ -40,6 +40,8 @@ export type RoomView = {
   geologistJoined: boolean;
   bankEndsAt: number | null;
   digEndsAt: number | null;
+  bankSeconds: number;
+  digSeconds: number;
   serverNow: number;
   totalDepth: number;
   rounds: RoundView[];

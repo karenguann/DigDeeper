@@ -30,6 +30,8 @@ export type RoomRecord = {
   geologistToken: string | null;
   bankEndsAt: number | null;
   digEndsAt: number | null;
+  bankSeconds?: number;
+  digSeconds?: number;
   createdAt: number;
   rounds: RoundRecord[];
 };
@@ -124,49 +126,57 @@ function dbPath() {
 
 async function openSqlite(): Promise<SqliteDb> {
   const globalDb = globalThis as unknown as { __digDb?: SqliteDb };
-  if (globalDb.__digDb) return globalDb.__digDb;
-  const { DatabaseSync } = await import("node:sqlite");
-  const database = new DatabaseSync(dbPath()) as unknown as SqliteDb;
-  database.exec(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS rooms (
-      code TEXT PRIMARY KEY,
-      day_index INTEGER NOT NULL,
-      status TEXT NOT NULL,
-      round_index INTEGER NOT NULL,
-      digger_token TEXT,
-      geologist_token TEXT,
-      bank_ends_at INTEGER,
-      dig_ends_at INTEGER,
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS rounds (
-      room_code TEXT NOT NULL,
-      round_index INTEGER NOT NULL,
-      bank_json TEXT,
-      reasoning TEXT,
-      guess TEXT,
-      attempts_json TEXT,
-      outcome TEXT,
-      rarity INTEGER,
-      gem_type TEXT,
-      gem_emoji TEXT,
-      depth_gained INTEGER,
-      matched_bank_word TEXT,
-      matched_tier INTEGER,
-      matched_canonical TEXT,
-      PRIMARY KEY (room_code, round_index)
-    );
-  `);
+  if (!globalDb.__digDb) {
+    const { DatabaseSync } = await import("node:sqlite");
+    const database = new DatabaseSync(dbPath()) as unknown as SqliteDb;
+    database.exec(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS rooms (
+        code TEXT PRIMARY KEY,
+        day_index INTEGER NOT NULL,
+        status TEXT NOT NULL,
+        round_index INTEGER NOT NULL,
+        digger_token TEXT,
+        geologist_token TEXT,
+        bank_ends_at INTEGER,
+        dig_ends_at INTEGER,
+        created_at INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS rounds (
+        room_code TEXT NOT NULL,
+        round_index INTEGER NOT NULL,
+        bank_json TEXT,
+        reasoning TEXT,
+        guess TEXT,
+        attempts_json TEXT,
+        outcome TEXT,
+        rarity INTEGER,
+        gem_type TEXT,
+        gem_emoji TEXT,
+        depth_gained INTEGER,
+        matched_bank_word TEXT,
+        matched_tier INTEGER,
+        matched_canonical TEXT,
+        PRIMARY KEY (room_code, round_index)
+      );
+    `);
+    globalDb.__digDb = database;
+  }
+  const database = globalDb.__digDb;
   const roomColumns = database.prepare("PRAGMA table_info(rooms)").all() as { name: string }[];
   if (!roomColumns.some((column) => column.name === "bank_ends_at")) {
     database.exec("ALTER TABLE rooms ADD COLUMN bank_ends_at INTEGER");
+  }
+  if (!roomColumns.some((column) => column.name === "bank_seconds")) {
+    database.exec("ALTER TABLE rooms ADD COLUMN bank_seconds INTEGER");
+  }
+  if (!roomColumns.some((column) => column.name === "dig_seconds")) {
+    database.exec("ALTER TABLE rooms ADD COLUMN dig_seconds INTEGER");
   }
   const roundColumns = database.prepare("PRAGMA table_info(rounds)").all() as { name: string }[];
   if (!roundColumns.some((column) => column.name === "attempts_json")) {
     database.exec("ALTER TABLE rounds ADD COLUMN attempts_json TEXT");
   }
-  globalDb.__digDb = database;
   return database;
 }
 
@@ -186,6 +196,8 @@ type RoomRow = {
   geologist_token: string | null;
   bank_ends_at: number | null;
   dig_ends_at: number | null;
+  bank_seconds: number | null;
+  dig_seconds: number | null;
   created_at: number;
 };
 
@@ -214,6 +226,8 @@ function rowToRoom(row: RoomRow, rounds: RoundRow[]): RoomRecord {
     geologistToken: row.geologist_token,
     bankEndsAt: row.bank_ends_at,
     digEndsAt: row.dig_ends_at,
+    bankSeconds: row.bank_seconds ?? 60,
+    digSeconds: row.dig_seconds ?? 25,
     createdAt: row.created_at,
     rounds: rounds.map((round) => ({
       roundIndex: round.round_index,
@@ -254,8 +268,8 @@ function sqliteStore(): RoomStore {
         }
         database
           .prepare(
-            `INSERT INTO rooms (code, day_index, status, round_index, digger_token, geologist_token, bank_ends_at, dig_ends_at, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO rooms (code, day_index, status, round_index, digger_token, geologist_token, bank_ends_at, dig_ends_at, bank_seconds, dig_seconds, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .run(
             room.code,
@@ -266,6 +280,8 @@ function sqliteStore(): RoomStore {
             room.geologistToken,
             room.bankEndsAt,
             room.digEndsAt,
+            room.bankSeconds ?? 60,
+            room.digSeconds ?? 25,
             room.createdAt,
           );
         const insertRound = database.prepare(
@@ -316,7 +332,7 @@ function sqliteStore(): RoomStore {
         if (JSON.stringify(room) !== before) {
           database
             .prepare(
-              `UPDATE rooms SET status = ?, round_index = ?, digger_token = ?, geologist_token = ?, bank_ends_at = ?, dig_ends_at = ? WHERE code = ?`,
+              `UPDATE rooms SET status = ?, round_index = ?, digger_token = ?, geologist_token = ?, bank_ends_at = ?, dig_ends_at = ?, bank_seconds = ?, dig_seconds = ? WHERE code = ?`,
             )
             .run(
               room.status,
@@ -325,6 +341,8 @@ function sqliteStore(): RoomStore {
               room.geologistToken,
               room.bankEndsAt,
               room.digEndsAt,
+              room.bankSeconds ?? 60,
+              room.digSeconds ?? 25,
               room.code,
             );
           const updateRound = database.prepare(

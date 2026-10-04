@@ -147,6 +147,19 @@ img { image-rendering: pixelated; }
 
 .rules li { line-height: 1.6; }
 
+.lobby-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal .field {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .hero-row {
   display: flex;
   align-items: flex-end;

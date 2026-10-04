@@ -9,10 +9,28 @@ import { roomStore, type RoomRecord } from "@/lib/roomStore";
 import { normalize, scoreGuess } from "@/lib/scoring";
 import type { BankWord, Role, RoomView } from "@/lib/types";
 
-const BANK_MS = 60_000;
+const DEFAULT_BANK_SECONDS = 60;
+const DEFAULT_DIG_SECONDS = 25;
+const MIN_SECONDS = 5;
+const MAX_SECONDS = 600;
 const BANK_GRACE_MS = 2_000;
-const DIG_MS = 25_000;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function bankSecondsOf(room: RoomRecord) {
+  return room.bankSeconds ?? DEFAULT_BANK_SECONDS;
+}
+
+function digSecondsOf(room: RoomRecord) {
+  return room.digSeconds ?? DEFAULT_DIG_SECONDS;
+}
+
+function parseSeconds(value: unknown) {
+  const seconds = typeof value === "number" ? value : Number(value);
+  if (!Number.isInteger(seconds) || seconds < MIN_SECONDS || seconds > MAX_SECONDS) {
+    throw new GameError(400, `Time limits must be whole seconds from ${MIN_SECONDS} to ${MAX_SECONDS}.`);
+  }
+  return seconds;
+}
 
 function makeCode() {
   const bytes = randomBytes(4);
@@ -91,15 +109,6 @@ function parseBank(words: unknown): BankWord[] {
   return cleaned.map((word) => ({ word }));
 }
 
-function parseReasoning(reasoning: unknown): string | null {
-  if (reasoning == null || reasoning === "") return null;
-  if (typeof reasoning !== "string") throw new GameError(400, "The debrief must be text.");
-  const trimmed = reasoning.trim();
-  if (!trimmed) return null;
-  if (trimmed.length > 280) throw new GameError(400, "Keep the debrief to 280 characters.");
-  return trimmed;
-}
-
 function judgeGuess(room: RoomRecord, guess: string) {
   const round = room.rounds[room.roundIndex];
   if (!round?.bank) throw new GameError(500, "The bank is missing.");
@@ -122,19 +131,19 @@ function resolveRound(room: RoomRecord, guess: string | null) {
   room.digEndsAt = null;
 }
 
-function startDigging(room: RoomRecord, bank: BankWord[], note: string | null) {
+function startDigging(room: RoomRecord, bank: BankWord[]) {
   const round = room.rounds[room.roundIndex];
   round.bank = bank;
-  round.reasoning = note;
+  round.reasoning = null;
   room.status = "digging";
   room.bankEndsAt = null;
-  room.digEndsAt = Date.now() + DIG_MS;
+  room.digEndsAt = Date.now() + digSecondsOf(room) * 1000;
 }
 
 function expireIfNeeded(room: RoomRecord) {
   if (room.status === "bank" && room.bankEndsAt !== null && Date.now() > room.bankEndsAt + BANK_GRACE_MS) {
     const round = room.rounds[room.roundIndex];
-    startDigging(room, round?.bank ?? [], round?.reasoning ?? null);
+    startDigging(room, round?.bank ?? []);
     return;
   }
   if (room.status === "digging" && room.digEndsAt !== null && Date.now() > room.digEndsAt) {
@@ -170,6 +179,8 @@ function toView(room: RoomRecord, token: string | null): RoomView {
     geologistJoined: Boolean(room.geologistToken),
     bankEndsAt: room.status === "bank" ? room.bankEndsAt : null,
     digEndsAt: room.status === "digging" ? room.digEndsAt : null,
+    bankSeconds: bankSecondsOf(room),
+    digSeconds: digSecondsOf(room),
     serverNow: Date.now(),
     totalDepth,
     rounds: room.rounds.map((round, index) => {
@@ -208,6 +219,8 @@ export async function createRoom(): Promise<{ token: string; view: RoomView }> {
       geologistToken: null,
       bankEndsAt: null,
       digEndsAt: null,
+      bankSeconds: DEFAULT_BANK_SECONDS,
+      digSeconds: DEFAULT_DIG_SECONDS,
       createdAt: now,
       rounds: [0, 1, 2, 3, 4].map(emptyRound),
     };
@@ -235,7 +248,22 @@ export async function startGame(code: string, token: string): Promise<RoomView> 
       throw new GameError(400, "Wait for both players before starting.");
     }
     room.status = "bank";
-    room.bankEndsAt = Date.now() + BANK_MS;
+    room.bankEndsAt = Date.now() + bankSecondsOf(room) * 1000;
+    return toView(room, token);
+  });
+}
+
+export async function updateLimits(
+  code: string,
+  token: string,
+  bankSeconds: unknown,
+  digSeconds: unknown,
+): Promise<RoomView> {
+  return mutateRoom(code, (room) => {
+    if (!roleFor(room, token)) throw new GameError(403, "This token does not belong to the expedition.");
+    if (room.status !== "lobby") throw new GameError(400, "The clocks are already running.");
+    room.bankSeconds = parseSeconds(bankSeconds);
+    room.digSeconds = parseSeconds(digSeconds);
     return toView(room, token);
   });
 }
@@ -253,19 +281,17 @@ export async function lockBank(
   code: string,
   token: string,
   words: unknown,
-  reasoning: unknown,
   commit: boolean,
 ): Promise<RoomView> {
   return mutateRoom(code, (room) => {
     assertRole(room, token, "geologist");
     if (room.status !== "bank") return toView(room, token);
     const bank = parseBank(words);
-    const note = parseReasoning(reasoning);
-    if (commit) startDigging(room, bank, note);
+    if (commit) startDigging(room, bank);
     else {
       const round = room.rounds[room.roundIndex];
       round.bank = bank;
-      round.reasoning = note;
+      round.reasoning = null;
     }
     return toView(room, token);
   });
@@ -300,7 +326,7 @@ export async function submitGuess(code: string, token: string, guess: unknown): 
 export async function advance(code: string, token: string): Promise<RoomView> {
   return mutateRoom(code, (room) => {
     if (!roleFor(room, token)) throw new GameError(403, "This token does not belong to the expedition.");
-    if (room.status !== "reveal") throw new GameError(400, "Nothing to advance.");
+    if (room.status !== "reveal") return toView(room, token);
     if (room.roundIndex >= 4) {
       room.status = "summary";
       room.digEndsAt = null;
@@ -308,7 +334,7 @@ export async function advance(code: string, token: string): Promise<RoomView> {
       room.status = "bank";
       room.roundIndex += 1;
       room.digEndsAt = null;
-      room.bankEndsAt = Date.now() + BANK_MS;
+      room.bankEndsAt = Date.now() + bankSecondsOf(room) * 1000;
     }
     return toView(room, token);
   });
