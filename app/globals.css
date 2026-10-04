@@ -140,7 +140,7 @@ img { image-rendering: pixelated; }
 
 .rules {
   margin: 12px 0 16px;
-  padding-left: 18px;
+  padding-left: 36px;
   display: grid;
   gap: 8px;
 }
