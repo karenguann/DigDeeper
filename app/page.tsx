@@ -9,7 +9,7 @@ import { LobbyScreen } from "@/components/LobbyScreen";
 import { PlayFrame } from "@/components/PlayFrame";
 import { RoundReveal } from "@/components/RoundReveal";
 import { TitleScreen } from "@/components/TitleScreen";
-import type { RoomView, SessionPayload } from "@/lib/types";
+import type { Role, RoomView, SessionPayload } from "@/lib/types";
 
 const TOKEN_PREFIX = "digdeeper.token.";
 
@@ -52,35 +52,37 @@ export default function Page() {
       setBooted(true);
       return;
     }
-    if (role === "digger" || role === "geologist") {
-      const saved = localStorage.getItem(storageKey(room, role));
-      if (saved) {
-        setCode(room);
-        setToken(saved);
-        setBooted(true);
-        return;
-      }
-    }
-    if (role === "geologist") {
-      void (async () => {
-        try {
-          const response = await fetch(`/api/rooms/${room}/join`, { method: "POST" });
-          const data: unknown = await response.json();
-          if (!response.ok || !isSession(data)) {
-            const message = data && typeof data === "object" && "error" in data ? String(data.error) : "Could not join.";
-            throw new Error(message);
-          }
-          takeView(data, data.token);
-        } catch (err) {
-          setError(err instanceof Error ? err.message : "Could not join.");
-        } finally {
-          setBooted(true);
-        }
-      })();
+    if (role !== "digger" && role !== "geologist") {
+      setError("This link does not name a seat.");
+      setBooted(true);
       return;
     }
-    setError("This browser does not hold the digger token for that room.");
-    setBooted(true);
+    const saved = localStorage.getItem(storageKey(room, role));
+    if (saved) {
+      setCode(room);
+      setToken(saved);
+      setBooted(true);
+      return;
+    }
+    void (async () => {
+      try {
+        const response = await fetch(`/api/rooms/${room}/join`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role }),
+        });
+        const data: unknown = await response.json();
+        if (!response.ok || !isSession(data)) {
+          const message = data && typeof data === "object" && "error" in data ? String(data.error) : "Could not join.";
+          throw new Error(message);
+        }
+        takeView(data, data.token);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not join.");
+      } finally {
+        setBooted(true);
+      }
+    })();
   }, [takeView]);
 
   useEffect(() => {
@@ -179,11 +181,15 @@ export default function Page() {
     }
   }
 
-  async function createExpedition() {
+  async function openRoom(body: { solo?: boolean; role?: Role }) {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch("/api/rooms", { method: "POST" });
+      const response = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
       const data: unknown = await response.json();
       if (!response.ok || !isSession(data)) {
         const message = data && typeof data === "object" && "error" in data ? String(data.error) : "Could not open a shaft.";
@@ -197,31 +203,18 @@ export default function Page() {
     }
   }
 
-  async function joinExpedition(raw: string) {
-    const room = raw.trim().toUpperCase();
-    if (!room) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/rooms/${room}/join`, { method: "POST" });
-      const data: unknown = await response.json();
-      if (!response.ok || !isSession(data)) {
-        const message = data && typeof data === "object" && "error" in data ? String(data.error) : "Could not join.";
-        throw new Error(message);
-      }
-      takeView(data, data.token);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not join.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   let body = null;
   if (!booted || (token && !view && !error)) {
     body = <p className="boot">Descending…</p>;
   } else if (!view?.role) {
-    body = <TitleScreen busy={busy} error={error} onCreate={() => void createExpedition()} onJoin={(value) => void joinExpedition(value)} />;
+    body = (
+      <TitleScreen
+        busy={busy}
+        error={error}
+        onStart={() => void openRoom({ solo: true })}
+        onCreate={(role) => void openRoom({ role })}
+      />
+    );
   } else if (view.status === "lobby") {
     body = (
       <PlayFrame view={view}>
@@ -229,6 +222,7 @@ export default function Page() {
         <LobbyScreen
           code={view.code}
           role={view.role}
+          diggerJoined={view.diggerJoined}
           geologistJoined={view.geologistJoined}
           bankSeconds={view.bankSeconds}
           digSeconds={view.digSeconds}

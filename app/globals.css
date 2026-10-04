@@ -187,6 +187,18 @@ h1 {
   width: min(420px, 100%);
 }
 
+.title-actions {
+  display: flex;
+  gap: 12px;
+  width: min(420px, 100%);
+  flex-wrap: wrap;
+}
+
+.title-actions .pixel-btn,
+.title-actions .pixel-btn-ghost {
+  flex: 1 1 160px;
+}
+
 .play {
   display: grid;
   grid-template-columns: 196px 1fr;

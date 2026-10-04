@@ -48,7 +48,9 @@ export function RoundReveal({
           : "Fuse burned out";
   const detail =
     round?.outcome === "gem"
-      ? `${round.matchedCanonical} · Digger +${round.depthGained}`
+      ? view.solo
+        ? `${round.matchedCanonical} · +${round.depthGained}m`
+        : `${round.matchedCanonical} · Digger +${round.depthGained}`
       : round?.outcome === "bomb"
         ? `${round.matchedBankWord} was already in the bank · Geologist +${round.trapScore}`
         : round?.guess

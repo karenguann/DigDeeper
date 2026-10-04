@@ -2,20 +2,20 @@ import { useState } from "react";
 
 import { PixelSprite } from "@/components/PixelSprite";
 import { dayIndexFromDate } from "@/lib/day";
+import type { Role } from "@/lib/types";
 
 export function TitleScreen({
   busy,
   error,
+  onStart,
   onCreate,
-  onJoin,
 }: {
   busy: boolean;
   error: string | null;
-  onCreate: () => void;
-  onJoin: (code: string) => void;
+  onStart: () => void;
+  onCreate: (role: Role) => void;
 }) {
   const [picking, setPicking] = useState(false);
-  const [code, setCode] = useState("");
   const day = dayIndexFromDate();
 
   return (
@@ -33,35 +33,26 @@ export function TitleScreen({
         Dig Deeper #{day}. Five prompts. Twenty-five seconds each. Rarer answers
         get more points.
       </p>
-      <p className="hint">
-        The geologist buries 20 bombs. The digger tries to miss every one.
-      </p>
       {error ? <p className="banner">{error}</p> : null}
       {picking ? (
-        <form
-          className="stack"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onJoin(code);
-          }}
-        >
-          <label className="field">
-            <span>Expedition code</span>
-            <input
-              id="join-code"
-              className="pixel-input"
-              value={code}
-              autoComplete="off"
-              maxLength={6}
-              onChange={(event) => setCode(event.target.value.toUpperCase())}
-            />
-          </label>
+        <div className="role-row" key="roles">
           <button
+            id="create-digger"
             className="pixel-btn"
-            type="submit"
-            disabled={busy || code.trim().length < 4}
+            type="button"
+            disabled={busy}
+            onClick={() => onCreate("digger")}
           >
-            Join as geologist
+            I am the Digger
+          </button>
+          <button
+            id="create-geologist"
+            className="pixel-btn-ghost"
+            type="button"
+            disabled={busy}
+            onClick={() => onCreate("geologist")}
+          >
+            I am the Geologist
           </button>
           <button
             className="pixel-btn-ghost"
@@ -70,24 +61,26 @@ export function TitleScreen({
           >
             Back
           </button>
-        </form>
+        </div>
       ) : (
-        <div className="role-row">
+        <div className="title-actions" key="home">
           <button
+            id="start-solo"
             className="pixel-btn"
             type="button"
             disabled={busy}
-            onClick={onCreate}
+            onClick={onStart}
           >
-            I am the Digger
+            Start
           </button>
           <button
+            id="create-room"
             className="pixel-btn-ghost"
             type="button"
             disabled={busy}
             onClick={() => setPicking(true)}
           >
-            I am the Geologist
+            Create room
           </button>
         </div>
       )}

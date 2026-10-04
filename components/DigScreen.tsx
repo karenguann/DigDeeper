@@ -42,6 +42,9 @@ export function DigScreen({
       ) : (
         <>
           <p className="prompt" id="prompt-text">{round?.prompt}</p>
+          {view.solo ? (
+            <p className="hint">Any real answer scores. Rarer answers travel farther.</p>
+          ) : null}
           <Fuse secondsLeft={secondsLeft} total={fuseTotal} />
           <form
             className="guess-row"

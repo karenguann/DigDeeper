@@ -23,7 +23,12 @@ export function formatShare(
   totalTrap: number,
   rounds: { outcome: string | null; gemEmoji: string | null }[],
   host: string,
+  solo = false,
 ): string {
+  if (solo) {
+    const row = rounds.map((round) => roundEmoji(round)).join(" ");
+    return `Dig Deeper #${dayIndex}\nDepth: ${totalDepth}m\n\n${row}\n\n${host}`;
+  }
   const winner = winnerOf(totalDepth, totalTrap);
   const result = winner === "Tie" ? "Tie" : `${winner} wins`;
   if (role === "geologist") {

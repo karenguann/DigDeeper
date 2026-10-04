@@ -187,9 +187,10 @@ function toView(room: RoomRecord, token: string | null): RoomView {
     serverNow: Date.now(),
     totalDepth,
     totalTrap,
+    solo: Boolean(room.solo),
     rounds: room.rounds.map((round, index) => {
       const resolved = round.outcome !== null;
-      const showBank = resolved || (role === "geologist" && round.bank !== null);
+      const showBank = !room.solo && (resolved || (role === "geologist" && round.bank !== null));
       return {
         roundIndex: index,
         prompt: promptText(room, role, index),
@@ -210,7 +211,7 @@ function toView(room: RoomRecord, token: string | null): RoomView {
   };
 }
 
-export async function createRoom(): Promise<{ token: string; view: RoomView }> {
+export async function createRoom(role: Role = "digger"): Promise<{ token: string; view: RoomView }> {
   const token = randomBytes(16).toString("hex");
   const now = Date.now();
   for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -220,8 +221,9 @@ export async function createRoom(): Promise<{ token: string; view: RoomView }> {
       dayIndex: dayIndexFromDate(),
       status: "lobby",
       roundIndex: 0,
-      diggerToken: token,
-      geologistToken: null,
+      diggerToken: role === "digger" ? token : null,
+      geologistToken: role === "geologist" ? token : null,
+      solo: false,
       bankEndsAt: null,
       digEndsAt: null,
       bankSeconds: DEFAULT_BANK_SECONDS,
@@ -235,11 +237,53 @@ export async function createRoom(): Promise<{ token: string; view: RoomView }> {
   throw new GameError(500, "Could not open a shaft.");
 }
 
+export async function createSoloRoom(): Promise<{ token: string; view: RoomView }> {
+  const token = randomBytes(16).toString("hex");
+  const now = Date.now();
+  const dayIndex = dayIndexFromDate();
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const code = makeCode();
+    const room: RoomRecord = {
+      code,
+      dayIndex,
+      status: "digging",
+      roundIndex: 0,
+      diggerToken: token,
+      geologistToken: null,
+      solo: true,
+      bankEndsAt: null,
+      digEndsAt: now + DEFAULT_DIG_SECONDS * 1000,
+      bankSeconds: DEFAULT_BANK_SECONDS,
+      digSeconds: DEFAULT_DIG_SECONDS,
+      createdAt: now,
+      rounds: [0, 1, 2, 3, 4].map((index) => ({
+        ...emptyRound(index),
+        bank: [],
+      })),
+    };
+    const created = await roomStore().create(room);
+    if (created) return { token, view: toView(room, token) };
+  }
+  throw new GameError(500, "Could not open a shaft.");
+}
+
 export async function joinGeologist(code: string): Promise<{ token: string; view: RoomView }> {
   const token = randomBytes(16).toString("hex");
   const view = await mutateRoom(code, (room) => {
+    if (room.solo) throw new GameError(400, "This shaft is a solo dig.");
     if (room.geologistToken) throw new GameError(409, "A geologist is already in this shaft.");
     room.geologistToken = token;
+    return toView(room, token);
+  });
+  return { token, view };
+}
+
+export async function joinDigger(code: string): Promise<{ token: string; view: RoomView }> {
+  const token = randomBytes(16).toString("hex");
+  const view = await mutateRoom(code, (room) => {
+    if (room.solo) throw new GameError(400, "This shaft is a solo dig.");
+    if (room.diggerToken) throw new GameError(409, "A digger is already in this shaft.");
+    room.diggerToken = token;
     return toView(room, token);
   });
   return { token, view };
@@ -335,6 +379,12 @@ export async function advance(code: string, token: string): Promise<RoomView> {
     if (room.roundIndex >= 4) {
       room.status = "summary";
       room.digEndsAt = null;
+      room.bankEndsAt = null;
+    } else if (room.solo) {
+      room.roundIndex += 1;
+      room.status = "digging";
+      room.bankEndsAt = null;
+      room.digEndsAt = Date.now() + digSecondsOf(room) * 1000;
     } else {
       room.status = "bank";
       room.roundIndex += 1;

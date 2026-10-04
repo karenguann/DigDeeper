@@ -19,6 +19,7 @@ export function ExpeditionSummary({ view }: { view: RoomView }) {
       view.totalTrap,
       view.rounds,
       window.location.host,
+      view.solo,
     );
     setShareText(text);
     let wrote = false;
@@ -49,7 +50,11 @@ export function ExpeditionSummary({ view }: { view: RoomView }) {
   }
 
   const winner = winnerOf(view.totalDepth, view.totalTrap);
-  const verdict = winner === "Tie" ? "It's a tie" : `${winner} wins`;
+  const verdict = view.solo
+    ? `${view.totalDepth}m`
+    : winner === "Tie"
+      ? "It's a tie"
+      : `${winner} wins`;
 
   return (
     <>
@@ -58,7 +63,11 @@ export function ExpeditionSummary({ view }: { view: RoomView }) {
         <span>Dig Deeper #{view.dayIndex}</span>
       </div>
       <p className="verdict" id="winner">{verdict}</p>
-      <p className="score-line">Digger {view.totalDepth} · Geologist {view.totalTrap}</p>
+      <p className="score-line">
+        {view.solo
+          ? `You travelled ${view.totalDepth} meters.`
+          : `Digger ${view.totalDepth} · Geologist ${view.totalTrap}`}
+      </p>
       <div className="cards">
         {view.rounds.map((round) => {
           const expanded = open === round.roundIndex;

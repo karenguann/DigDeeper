@@ -46,6 +46,7 @@ export type RoomView = {
   serverNow: number;
   totalDepth: number;
   totalTrap: number;
+  solo: boolean;
   rounds: RoundView[];
 };
 

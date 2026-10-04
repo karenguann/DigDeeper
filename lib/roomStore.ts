@@ -33,6 +33,7 @@ export type RoomRecord = {
   digEndsAt: number | null;
   bankSeconds?: number;
   digSeconds?: number;
+  solo?: boolean;
   createdAt: number;
   rounds: RoundRecord[];
 };
@@ -174,6 +175,9 @@ async function openSqlite(): Promise<SqliteDb> {
   if (!roomColumns.some((column) => column.name === "dig_seconds")) {
     database.exec("ALTER TABLE rooms ADD COLUMN dig_seconds INTEGER");
   }
+  if (!roomColumns.some((column) => column.name === "solo")) {
+    database.exec("ALTER TABLE rooms ADD COLUMN solo INTEGER");
+  }
   const roundColumns = database.prepare("PRAGMA table_info(rounds)").all() as { name: string }[];
   if (!roundColumns.some((column) => column.name === "attempts_json")) {
     database.exec("ALTER TABLE rounds ADD COLUMN attempts_json TEXT");
@@ -202,6 +206,7 @@ type RoomRow = {
   dig_ends_at: number | null;
   bank_seconds: number | null;
   dig_seconds: number | null;
+  solo: number | null;
   created_at: number;
 };
 
@@ -233,6 +238,7 @@ function rowToRoom(row: RoomRow, rounds: RoundRow[]): RoomRecord {
     digEndsAt: row.dig_ends_at,
     bankSeconds: row.bank_seconds ?? 60,
     digSeconds: row.dig_seconds ?? 25,
+    solo: Boolean(row.solo),
     createdAt: row.created_at,
     rounds: rounds.map((round) => ({
       roundIndex: round.round_index,
@@ -274,8 +280,8 @@ function sqliteStore(): RoomStore {
         }
         database
           .prepare(
-            `INSERT INTO rooms (code, day_index, status, round_index, digger_token, geologist_token, bank_ends_at, dig_ends_at, bank_seconds, dig_seconds, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO rooms (code, day_index, status, round_index, digger_token, geologist_token, bank_ends_at, dig_ends_at, bank_seconds, dig_seconds, solo, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .run(
             room.code,
@@ -288,6 +294,7 @@ function sqliteStore(): RoomStore {
             room.digEndsAt,
             room.bankSeconds ?? 60,
             room.digSeconds ?? 25,
+            room.solo ? 1 : 0,
             room.createdAt,
           );
         const insertRound = database.prepare(
@@ -339,7 +346,7 @@ function sqliteStore(): RoomStore {
         if (JSON.stringify(room) !== before) {
           database
             .prepare(
-              `UPDATE rooms SET status = ?, round_index = ?, digger_token = ?, geologist_token = ?, bank_ends_at = ?, dig_ends_at = ?, bank_seconds = ?, dig_seconds = ? WHERE code = ?`,
+              `UPDATE rooms SET status = ?, round_index = ?, digger_token = ?, geologist_token = ?, bank_ends_at = ?, dig_ends_at = ?, bank_seconds = ?, dig_seconds = ?, solo = ? WHERE code = ?`,
             )
             .run(
               room.status,
@@ -350,6 +357,7 @@ function sqliteStore(): RoomStore {
               room.digEndsAt,
               room.bankSeconds ?? 60,
               room.digSeconds ?? 25,
+              room.solo ? 1 : 0,
               room.code,
             );
           const updateRound = database.prepare(

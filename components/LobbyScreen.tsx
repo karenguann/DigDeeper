@@ -7,6 +7,7 @@ import type { Role } from "@/lib/types";
 export function LobbyScreen({
   code,
   role,
+  diggerJoined,
   geologistJoined,
   bankSeconds,
   digSeconds,
@@ -16,6 +17,7 @@ export function LobbyScreen({
 }: {
   code: string;
   role: Role;
+  diggerJoined: boolean;
   geologistJoined: boolean;
   bankSeconds: number;
   digSeconds: number;
@@ -29,11 +31,14 @@ export function LobbyScreen({
   );
   const [bankInput, setBankInput] = useState(String(bankSeconds));
   const [digInput, setDigInput] = useState(String(digSeconds));
+  const digger = role === "digger";
+  const inviteRole = digger ? "geologist" : "digger";
+  const otherReady = digger ? geologistJoined : diggerJoined;
+  const bothReady = diggerJoined && geologistJoined;
   const link =
     typeof window === "undefined"
       ? ""
-      : `${window.location.origin}/?room=${code}&role=geologist`;
-  const digger = role === "digger";
+      : `${window.location.origin}/?room=${code}&role=${inviteRole}`;
 
   useEffect(() => {
     if (!panel) return;
@@ -66,21 +71,21 @@ export function LobbyScreen({
         Geologist {formatSeconds(bankSeconds)} · Digger{" "}
         {formatSeconds(digSeconds)}
       </p>
-      {geologistJoined ? (
+      {bothReady ? (
         <p className="hint">
           Both of you are in the shaft. The clock stays still until someone
           clicks Start.
         </p>
       ) : (
         <p className="hint">
-          Send the geologist this link. Nothing starts until both of you are
+          Send the {inviteRole} this link. Nothing starts until both of you are
           here and someone clicks Start.
         </p>
       )}
-      {digger ? (
+      {!otherReady ? (
         <>
           <button
-            id="copy-geologist-link"
+            id={digger ? "copy-geologist-link" : "copy-digger-link"}
             className="pixel-btn"
             type="button"
             onClick={async () => {
@@ -88,14 +93,14 @@ export function LobbyScreen({
               setCopied(true);
             }}
           >
-            {copied ? "Link copied" : "Copy geologist link"}
+            {copied ? "Link copied" : `Copy ${inviteRole} link`}
           </button>
-          <p className="muted" id="geologist-link">
+          <p className="muted" id={digger ? "geologist-link" : "digger-link"}>
             {link}
           </p>
         </>
       ) : null}
-      {geologistJoined ? (
+      {bothReady ? (
         <button
           id="start-game"
           className="pixel-btn"
@@ -106,7 +111,7 @@ export function LobbyScreen({
           Start
         </button>
       ) : (
-        <p className="muted">Waiting for the geologist</p>
+        <p className="muted">Waiting for the {inviteRole}</p>
       )}
       <div className="lobby-actions">
         <button

@@ -26,8 +26,14 @@ export function PlayFrame({ view, children }: { view: RoomView; children: ReactN
       <section className="panel">
         {racing ? (
           <p className="scoreboard" id="scoreboard">
-            <span>Digger {view.totalDepth}</span>
-            <span>Geologist {view.totalTrap}</span>
+            {view.solo ? (
+              <span>Depth {view.totalDepth}m</span>
+            ) : (
+              <>
+                <span>Digger {view.totalDepth}</span>
+                <span>Geologist {view.totalTrap}</span>
+              </>
+            )}
           </p>
         ) : null}
         {children}
