@@ -24,10 +24,15 @@ export function LobbyScreen({
   onSaveLimits: (bankSeconds: number, digSeconds: number) => Promise<boolean>;
 }) {
   const [copied, setCopied] = useState(false);
-  const [panel, setPanel] = useState<"instructions" | "settings" | null>("instructions");
+  const [panel, setPanel] = useState<"instructions" | "settings" | null>(
+    "instructions",
+  );
   const [bankInput, setBankInput] = useState(String(bankSeconds));
   const [digInput, setDigInput] = useState(String(digSeconds));
-  const link = typeof window === "undefined" ? "" : `${window.location.origin}/?room=${code}&role=geologist`;
+  const link =
+    typeof window === "undefined"
+      ? ""
+      : `${window.location.origin}/?room=${code}&role=geologist`;
   const digger = role === "digger";
 
   useEffect(() => {
@@ -48,17 +53,29 @@ export function LobbyScreen({
   return (
     <div className="lobby">
       <PixelSprite name={digger ? "pickaxe" : "miner"} size={72} alt="" />
-      <p className="muted">{digger ? "You are the Digger" : "You are the Geologist"}</p>
+      <p className="muted">
+        {digger ? "You are the Digger" : "You are the Geologist"}
+      </p>
       <p>
-        Room <span className="code" id="room-code">{code}</span>
+        Room{" "}
+        <span className="code" id="room-code">
+          {code}
+        </span>
       </p>
       <p className="hint" id="time-limits">
-        Geologist {formatSeconds(bankSeconds)} · Digger {formatSeconds(digSeconds)}
+        Geologist {formatSeconds(bankSeconds)} · Digger{" "}
+        {formatSeconds(digSeconds)}
       </p>
       {geologistJoined ? (
-        <p className="hint">Both of you are in the shaft. The clock stays still until someone clicks Start.</p>
+        <p className="hint">
+          Both of you are in the shaft. The clock stays still until someone
+          clicks Start.
+        </p>
       ) : (
-        <p className="hint">Send the geologist this link. Nothing starts until both of you are here and someone clicks Start.</p>
+        <p className="hint">
+          Send the geologist this link. Nothing starts until both of you are
+          here and someone clicks Start.
+        </p>
       )}
       {digger ? (
         <>
@@ -73,21 +90,38 @@ export function LobbyScreen({
           >
             {copied ? "Link copied" : "Copy geologist link"}
           </button>
-          <p className="muted" id="geologist-link">{link}</p>
+          <p className="muted" id="geologist-link">
+            {link}
+          </p>
         </>
       ) : null}
       {geologistJoined ? (
-        <button id="start-game" className="pixel-btn" type="button" disabled={busy} onClick={onStart}>
+        <button
+          id="start-game"
+          className="pixel-btn"
+          type="button"
+          disabled={busy}
+          onClick={onStart}
+        >
           Start
         </button>
       ) : (
         <p className="muted">Waiting for the geologist</p>
       )}
       <div className="lobby-actions">
-        <button id="open-settings" className="pixel-btn-ghost" type="button" onClick={openSettings}>
+        <button
+          id="open-settings"
+          className="pixel-btn-ghost"
+          type="button"
+          onClick={openSettings}
+        >
           Settings
         </button>
-        <button className="pixel-btn-ghost" type="button" onClick={() => setPanel("instructions")}>
+        <button
+          className="pixel-btn-ghost"
+          type="button"
+          onClick={() => setPanel("instructions")}
+        >
           Instructions
         </button>
       </div>
@@ -103,20 +137,41 @@ export function LobbyScreen({
             <h2 id="instructions-title">{digger ? "Digger" : "Geologist"}</h2>
             <p className="hint">
               {digger
-                ? "You name something the Geologist did not bury. You never see their list until the shaft is revealed."
+                ? "You name something the Geologist did not bury. You never see their list until the time is up."
                 : "You bury the answers a Digger is most likely to say. You see each guess as they try it."}
             </p>
             <ol className="rules">
               <li>Five shafts. Each one has its own prompt.</li>
-              <li>After Start, the Geologist has {formatSeconds(bankSeconds)} and 20 slots. Blank slots are not bombs. They can lock the bank early.</li>
+              <li>
+                After Start, the Geologist has {formatSeconds(bankSeconds)} and
+                20 answer slots. They can lock the answer bank early.
+              </li>
               <li>Then the Digger has {formatSeconds(digSeconds)}.</li>
-              <li>A guess that matches the bank, including another spelling of the same answer, is a bomb. The geologist scores 100 minus that answer's rarity. A bank word that is not a real answer scores 50.</li>
-              <li>A real answer that is not in the bank is a gem. The digger scores its rarity, from 1 to 100.</li>
+              <li>
+                A guess that matches an answer in the bank, including another
+                spelling of the same answer, is a bomb. The geologist scores 100
+                minus that answer's rarity. A bank word that is not a real
+                answer scores 50.
+              </li>
+              <li>
+                A real answer that is not in the bank is a gem. The digger
+                scores its rarity, from 1 to 100.
+              </li>
               <li>After five shafts, the higher score wins.</li>
-              <li>A guess that is not a real answer is invalid. The Digger can try again while time is left.</li>
-              <li>If a fuse runs out, that shaft scores 0 for both.</li>
+              <li>
+                A guess that is not a real answer is invalid. The Digger can try
+                again while time is left.
+              </li>
+              <li>
+                If the time runs out on the shaft, the Digger scores 0. The
+                Geologist scores the number of answers they buried.
+              </li>
             </ol>
-            <button className="pixel-btn" type="button" onClick={() => setPanel(null)}>
+            <button
+              className="pixel-btn"
+              type="button"
+              onClick={() => setPanel(null)}
+            >
               Close
             </button>
           </div>
@@ -134,14 +189,18 @@ export function LobbyScreen({
               event.preventDefault();
               const nextBank = Number(bankInput);
               const nextDig = Number(digInput);
-              if (!Number.isInteger(nextBank) || !Number.isInteger(nextDig)) return;
+              if (!Number.isInteger(nextBank) || !Number.isInteger(nextDig))
+                return;
               void onSaveLimits(nextBank, nextDig).then((saved) => {
                 if (saved) setPanel(null);
               });
             }}
           >
             <h2 id="settings-title">Time limits</h2>
-            <p className="hint">These clocks start when someone clicks Start. Both players share them.</p>
+            <p className="hint">
+              These clocks start when someone clicks Start. Both players share
+              them.
+            </p>
             <label className="field" htmlFor="bank-seconds">
               <span>Geologist, seconds</span>
               <input
@@ -169,10 +228,19 @@ export function LobbyScreen({
               />
             </label>
             <div className="lobby-actions">
-              <button id="save-settings" className="pixel-btn" type="submit" disabled={busy}>
+              <button
+                id="save-settings"
+                className="pixel-btn"
+                type="submit"
+                disabled={busy}
+              >
                 Save
               </button>
-              <button className="pixel-btn-ghost" type="button" onClick={() => setPanel(null)}>
+              <button
+                className="pixel-btn-ghost"
+                type="button"
+                onClick={() => setPanel(null)}
+              >
                 Close
               </button>
             </div>
