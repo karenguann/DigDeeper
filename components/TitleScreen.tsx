@@ -20,7 +20,6 @@ export function TitleScreen({
 
   return (
     <div className="title-screen">
-      {/* Header aligned inline to save vertical space and match the design */}
       <div className="hero-row inline-header">
         <h1>DIG DEEPER</h1>
         <PixelSprite name="diamond" size={72} alt="Diamond Sprite" />
@@ -50,7 +49,7 @@ export function TitleScreen({
 
             <div className="role-panel">
               <p className="panel-text">
-                The geologist buries 20 bombs.
+                The geologist buries 20 answers.
                 <br />
                 The digger tries to miss every one.
               </p>
@@ -79,30 +78,33 @@ export function TitleScreen({
         </div>
       ) : (
         <div className="main-menu-container" key="home">
-          <p className="lede">
-            Dig Deeper #{day}.<br />
-            Five prompts. Twenty-five seconds each. Rarer answers get more
-            points.
-          </p>
-          <div className="title-actions flex-row">
-            <button
-              id="start-solo"
-              className="pixel-btn"
-              type="button"
-              disabled={busy}
-              onClick={onStart}
-            >
-              START
-            </button>
-            <button
-              id="create-room"
-              className="pixel-btn-ghost"
-              type="button"
-              disabled={busy}
-              onClick={() => setPicking(true)}
-            >
-              CREATE ROOM
-            </button>
+          <div className="role-panel">
+            <p className="panel-text" style={{ textAlign: "center" }}>
+              Dig Deeper #{day}.<br />
+              <br />
+              Five prompts. Twenty-five seconds each. Rarer answers get more
+              points.
+            </p>
+            <div className="title-actions flex-row">
+              <button
+                id="start-solo"
+                className="pixel-btn"
+                type="button"
+                disabled={busy}
+                onClick={onStart}
+              >
+                START
+              </button>
+              <button
+                id="create-room"
+                className="pixel-btn-ghost"
+                type="button"
+                disabled={busy}
+                onClick={() => setPicking(true)}
+              >
+                CREATE ROOM
+              </button>
+            </div>
           </div>
         </div>
       )}

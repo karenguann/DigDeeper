@@ -10,10 +10,22 @@ function trackTop(meters: number) {
   return `calc(${depthFraction(meters)} * (100% - ${DIGGER_PX}px))`;
 }
 
-export function ShaftVisual({ totalDepth, rounds }: { totalDepth: number; rounds: RoundView[] }) {
+export function ShaftVisual({
+  totalDepth,
+  rounds,
+}: {
+  totalDepth: number;
+  rounds: RoundView[];
+}) {
   let depth = 0;
   const piled = new Map<number, number>();
-  const finds: { key: number; meters: number; slot: number; name: string; alt: string }[] = [];
+  const finds: {
+    key: number;
+    meters: number;
+    slot: number;
+    name: string;
+    alt: string;
+  }[] = [];
 
   for (const round of rounds) {
     if (!round.outcome || round.depthGained === null) continue;
@@ -33,7 +45,10 @@ export function ShaftVisual({ totalDepth, rounds }: { totalDepth: number; rounds
   return (
     <aside className="shaft" aria-label={`Shaft, depth ${totalDepth} meters`}>
       <div className="shaft-depth">{totalDepth}m</div>
-      <div className="shaft-track" style={{ ["--digger" as string]: `${DIGGER_PX}px` }}>
+      <div
+        className="shaft-track"
+        style={{ ["--digger" as string]: `${DIGGER_PX}px` }}
+      >
         {SOIL_LAYERS.map((layer, index) => {
           const last = index === SOIL_LAYERS.length - 1;
           const span = `calc((100% - var(--digger)) / ${SOIL_LAYERS.length})`;
@@ -50,7 +65,11 @@ export function ShaftVisual({ totalDepth, rounds }: { totalDepth: number; rounds
           );
         })}
         {MARKS.map((mark) => (
-          <span key={mark} className="depth-mark" style={{ top: trackTop(mark) }}>
+          <span
+            key={mark}
+            className="depth-mark"
+            style={{ top: trackTop(mark) }}
+          >
             {mark}m
           </span>
         ))}

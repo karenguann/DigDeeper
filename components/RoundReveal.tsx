@@ -45,7 +45,7 @@ export function RoundReveal({
         ? "Bomb detonated"
         : round?.guess
           ? "Bedrock"
-          : "Fuse burned out";
+          : "Timer ran out";
   const detail =
     round?.outcome === "gem"
       ? view.solo
@@ -63,16 +63,26 @@ export function RoundReveal({
         <span>{view.role === "geologist" ? "Geologist" : "Digger"}</span>
         <span>Shaft {view.roundIndex + 1} / 5</span>
       </div>
-      <p className="prompt" id="prompt-text">{round?.prompt}</p>
+      <p className="prompt" id="prompt-text">
+        {round?.prompt}
+      </p>
       <div className="outcome">
-        {round?.outcome === "bedrock" ? <PixelSprite name="pickaxe" size={64} alt="" /> : null}
+        {round?.outcome === "bedrock" ? (
+          <PixelSprite name="pickaxe" size={64} alt="" />
+        ) : null}
         <PixelSprite name={sprite} size={96} alt={title} />
         <h2>{title}</h2>
         <p>{detail}</p>
       </div>
       {round ? <BankList round={round} /> : null}
       <div className="actions">
-        <button id="advance" className="pixel-btn" type="button" disabled={busy} onClick={go}>
+        <button
+          id="advance"
+          className="pixel-btn"
+          type="button"
+          disabled={busy}
+          onClick={go}
+        >
           {last ? "Expedition log" : "Next shaft"}
         </button>
       </div>

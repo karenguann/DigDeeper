@@ -18,15 +18,13 @@
 html, body {
   margin: 0;
   min-height: 100%;
-  background:
-    radial-gradient(circle at 20% 0%, #2a1c12 0%, transparent 40%),
-    var(--cave);
+  background-color: var(--cave);
+  background-image: url("/sprites/soil-bg.jpg");
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--sand);
-}
-
-html[data-ground],
-html[data-ground] body {
-  background: var(--ground);
 }
 
 body {
@@ -296,6 +294,7 @@ h1 {
 }
 
 .play {
+  --play-height: min(72vh, 640px);
   display: grid;
   grid-template-columns: 196px 1fr;
   gap: 16px;
@@ -306,7 +305,7 @@ h1 {
   position: relative;
   display: flex;
   flex-direction: column;
-  height: min(72vh, 640px);
+  height: var(--play-height);
   min-height: 420px;
   background: #140e09;
   border: var(--line) solid var(--wood);
@@ -379,7 +378,18 @@ h1 {
   border: var(--line) solid var(--wood);
   box-shadow: inset 0 0 0 4px #2a1b10, 6px 6px 0 #0c0907;
   padding: 16px;
+  height: var(--play-height);
   min-height: 420px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
 }
 
 .panel-head {
@@ -429,7 +439,7 @@ h1 {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
-  align-items: center;
+  align-items: end;
 }
 
 .tier {
@@ -580,9 +590,10 @@ code, .code {
   .play { grid-template-columns: 1fr; }
   .shaft { height: 240px; min-height: 240px; }
   .bank-grid, .guess-row, .lock-row { grid-template-columns: 1fr; }
-  .panel { min-height: 0; }
+  .panel { height: auto; min-height: 0; overflow: visible; }
   
   /* Stack UI Elements on Mobile */
   .panels-container { flex-direction: column; }
   .inline-header { flex-direction: column; gap: 8px; }
 }
+

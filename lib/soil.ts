@@ -14,15 +14,6 @@ export const SOIL_LAYERS: { from: number; color: string }[] = [
   { from: 450, color: "#140e09" },
 ];
 
-export function soilColorForDepth(meters: number): string {
-  const depth = Math.max(0, meters);
-  let color = SOIL_LAYERS[0].color;
-  for (const layer of SOIL_LAYERS) {
-    if (depth >= layer.from) color = layer.color;
-  }
-  return color;
-}
-
 export function depthFraction(meters: number): number {
   return Math.min(1, Math.max(0, meters / SHAFT_SCALE));
 }
