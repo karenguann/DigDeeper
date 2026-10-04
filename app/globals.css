@@ -108,12 +108,98 @@ img { image-rendering: pixelated; }
 
 .pixel-area { min-height: 72px; resize: vertical; }
 
-.title-screen, .lobby {
+.title-screen {
   display: grid;
-  gap: 20px;
+  align-content: start; /* This forces everything to the top */
+  gap: 32px; /* Slightly increased gap for better breathing room */
   justify-items: center;
   text-align: center;
-  padding-top: 12px;
+  padding-top: 12vh; /* Adjust this value (e.g., 8vh or 15vh) to push it exactly where you want it */
+  
+  background-image: 
+    linear-gradient(rgba(20, 14, 9, 0.4), rgba(20, 14, 9, 0.8)),
+    url('/sprites/soil-bg.jpg'); 
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0;
+  
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.inline-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.main-menu-container,
+.role-selection-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+}
+
+.panels-container {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+}
+
+.role-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--panel-deep);
+  border: var(--line) solid var(--wood);
+  box-shadow: inset 0 0 0 4px var(--panel), 6px 6px 0 #0c0907;
+  padding: 32px 24px;
+  min-height: 220px;
+}
+
+.panel-text {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+.bottom-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.instruction-text {
+  color: var(--sand);
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.title-actions.flex-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
 }
 
 .modal-back {
@@ -196,7 +282,17 @@ h1 {
 
 .title-actions .pixel-btn,
 .title-actions .pixel-btn-ghost {
-  flex: 1 1 160px;
+  flex: 0 1 auto; /* Stops the buttons from stretching */
+  min-width: 160px; /* Gives them a consistent, reasonable size */
+}
+
+/* Also make sure your .title-actions container centers them */
+.title-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center; /* Ensures the fixed-width buttons stay centered */
+  width: min(420px, 100%);
+  flex-wrap: wrap;
 }
 
 .play {
@@ -485,5 +581,8 @@ code, .code {
   .shaft { height: 240px; min-height: 240px; }
   .bank-grid, .guess-row, .lock-row { grid-template-columns: 1fr; }
   .panel { min-height: 0; }
+  
+  /* Stack UI Elements on Mobile */
+  .panels-container { flex-direction: column; }
+  .inline-header { flex-direction: column; gap: 8px; }
 }
-
