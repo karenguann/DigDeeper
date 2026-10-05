@@ -148,35 +148,63 @@ export function LobbyScreen({
             <h2 id="instructions-title">{digger ? "Digger" : "Geologist"}</h2>
             <p className="hint">
               {digger
-                ? "You name something the Geologist did not bury. You never see their list until the time is up."
-                : "You bury the answers a Digger is most likely to say. You see each guess as they try it."}
+                ? "Your goal: find rare answers the Geologist didn't predict."
+                : "Your goal: predict what the Digger will say."}
             </p>
+            {digger ? null : (
+              <p className="hint">For each of the 5 prompts:</p>
+            )}
             <ol className="rules">
-              <li>Five shafts. Each one has its own prompt.</li>
-              <li>
-                After Start, the Geologist has {formatSeconds(bankSeconds)} and
-                20 answer slots. They can lock the answer bank early.
-              </li>
-              <li>Then the Digger has {formatSeconds(digSeconds)}.</li>
-              <li>
-                A guess that matches an answer in the bank, including another
-                spelling of the same answer, is a bomb. The geologist scores 100
-                minus that answer's rarity. A bank word that is not a real
-                answer scores 50.
-              </li>
-              <li>
-                A real answer that is not in the bank is a gem. The digger
-                scores its rarity, from 1 to 100.
-              </li>
-              <li>After five shafts, the higher score wins.</li>
-              <li>
-                A guess that is not a real answer is invalid. The Digger can try
-                again while time is left.
-              </li>
-              <li>
-                If the time runs out on the shaft, the Digger scores 0. The
-                Geologist scores the number of answers they buried.
-              </li>
+              {digger ? (
+                <>
+                  <li>
+                    For each of the 5 prompts, you have {formatSeconds(digSeconds)} to
+                    enter as many answers as you can.
+                  </li>
+                  <li>
+                    The Geologist sees the prompt first and secretly chooses up to
+                    20 answers they think you'll say.
+                  </li>
+                  <li>
+                    You then see the same prompt and have {formatSeconds(digSeconds)} to
+                    make guesses.
+                  </li>
+                  <li>
+                    If your answer is on the Geologist's list, it's a Bomb — the
+                    Geologist gets the points.
+                  </li>
+                  <li>
+                    If your answer is not on their list, it's a Gem — you get points
+                    based on how rare your answer is.
+                  </li>
+                  <li>
+                    You can keep guessing until time runs out. Invalid answers don't
+                    count.
+                  </li>
+                  <li>After 5 prompts, the player with the most points wins.</li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    You'll see the prompt first and have {formatSeconds(bankSeconds)} to
+                    enter up to 20 answers.
+                  </li>
+                  <li>Think of the answers you expect the Digger to guess.</li>
+                  <li>You can lock your answer bank early if you're finished.</li>
+                  <li>
+                    The Digger then gets {formatSeconds(digSeconds)} to make guesses.
+                  </li>
+                  <li>
+                    If the Digger guesses something on your list, it's a Bomb and you
+                    score points.
+                  </li>
+                  <li>
+                    If they guess something not on your list, it's a Gem and the
+                    Digger scores instead.
+                  </li>
+                  <li>After 5 prompts, the player with the most points wins.</li>
+                </>
+              )}
             </ol>
             <button
               className="pixel-btn"
