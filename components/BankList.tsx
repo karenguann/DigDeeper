@@ -6,11 +6,14 @@ export function BankList({ round }: { round: RoundView }) {
   return (
     <div>
       {round.bank.length === 0 ? (
-        <p className="hint">The bank was empty.</p>
+        <p className="hint">The answer bank is empty.</p>
       ) : (
         <ul className="chips">
           {round.bank.map((entry) => (
-            <li key={entry.word} className={entry.word === round.matchedBankWord ? "hit" : ""}>
+            <li
+              key={entry.word}
+              className={entry.word === round.matchedBankWord ? "hit" : ""}
+            >
               {entry.word}
             </li>
           ))}

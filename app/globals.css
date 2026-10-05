@@ -114,9 +114,7 @@ img { image-rendering: pixelated; }
   text-align: center;
   padding-top: 12vh; /* Adjust this value (e.g., 8vh or 15vh) to push it exactly where you want it */
   
-  background-image: 
-    linear-gradient(rgba(20, 14, 9, 0.4), rgba(20, 14, 9, 0.8)),
-    url('/sprites/soil-bg.jpg'); 
+  background-image: url('/sprites/soil-bg.jpg'); 
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
@@ -211,14 +209,22 @@ img { image-rendering: pixelated; }
 }
 
 .modal {
+  display: flex;
+  flex-direction: column;
   width: min(560px, 100%);
   max-height: min(80vh, 640px);
-  overflow: auto;
+  overflow: hidden;
   text-align: left;
   background: #1a120b;
   border: var(--line) solid var(--wood);
   box-shadow: inset 0 0 0 4px #2a1b10, 6px 6px 0 #0c0907;
   padding: 16px;
+}
+
+.modal .rules {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
 .modal h2 {
@@ -228,13 +234,48 @@ img { image-rendering: pixelated; }
 }
 
 .rules {
-  margin: 12px 0 16px;
+  margin: 20px 0 28px;
   padding-left: 36px;
   display: grid;
+  gap: 22px;
+}
+
+.rules li { line-height: 1.9; }
+
+.lobby {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.lobby-tools {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
   gap: 8px;
 }
 
-.rules li { line-height: 1.6; }
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--sand);
+  background: #1a120b;
+  border: none;
+  box-shadow: inset 0 0 0 4px var(--wood);
+}
+
+.icon-btn:hover {
+  color: var(--gold);
+  box-shadow: inset 0 0 0 4px var(--gold);
+}
 
 .lobby-actions {
   display: flex;
@@ -264,6 +305,11 @@ h1 {
 }
 
 .lede, .hint, .muted { color: var(--muted); }
+
+.hint {
+  margin: 0;
+  line-height: 1.9;
+}
 
 .role-row, .stack {
   display: grid;
@@ -380,16 +426,60 @@ h1 {
   padding: 16px;
   height: var(--play-height);
   min-height: 420px;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.actions {
+.stage {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.stage-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.stage-body > .prompt,
+.stage-body > .hint,
+.stage-body > .fuse-row,
+.stage-body > .verdict,
+.stage-body > .score-line,
+.stage-body > p,
+.stage-body > .banner {
+  margin: 0;
+}
+
+.stage-body > .cards,
+.stage-body > .bank-grid,
+.stage-body > .outcome,
+.stage-body > .chips,
+.stage-body > .attempts,
+.stage-body > .panel-head,
+.stage-body > .fuse-row {
+  align-self: stretch;
+  width: 100%;
+}
+
+.dock {
+  flex: none;
   margin-top: auto;
+  padding-top: 20px;
+}
+
+.dock:not(.guess-row):not(.lock-row) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .panel-head {
@@ -565,7 +655,16 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
+}
+
+.dock.actions {
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.dock .share-text {
+  width: 100%;
 }
 
 .share-text {
@@ -591,6 +690,8 @@ code, .code {
   .shaft { height: 240px; min-height: 240px; }
   .bank-grid, .guess-row, .lock-row { grid-template-columns: 1fr; }
   .panel { height: auto; min-height: 0; overflow: visible; }
+  .stage, .lobby { flex: none; }
+  .stage-body { overflow: visible; flex: none; }
   
   /* Stack UI Elements on Mobile */
   .panels-container { flex-direction: column; }

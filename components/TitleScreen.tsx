@@ -33,8 +33,8 @@ export function TitleScreen({
             <div className="role-panel">
               <p className="panel-text">
                 Dig Deeper #{day}.<br />
-                Five prompts. Twenty-five seconds each. Rarer answers get more
-                points.
+                Five daily prompts. Twenty-five seconds each. <br /> Rarer answers get
+                more points.
               </p>
               <button
                 id="create-digger"
@@ -82,8 +82,8 @@ export function TitleScreen({
             <p className="panel-text" style={{ textAlign: "center" }}>
               Dig Deeper #{day}.<br />
               <br />
-              Five prompts. Twenty-five seconds each. Rarer answers get more
-              points.
+              Five daily prompts. Twenty-five seconds each. <br /> Rarer answers get
+              more points.
             </p>
             <div className="title-actions flex-row">
               <button

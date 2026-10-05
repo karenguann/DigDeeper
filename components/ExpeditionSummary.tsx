@@ -57,7 +57,8 @@ export function ExpeditionSummary({ view }: { view: RoomView }) {
       : `${winner} wins`;
 
   return (
-    <>
+    <div className="stage">
+      <div className="stage-body">
       <div className="panel-head">
         <span>Expedition log</span>
         <span>Dig Deeper #{view.dayIndex}</span>
@@ -103,16 +104,17 @@ export function ExpeditionSummary({ view }: { view: RoomView }) {
           );
         })}
       </div>
-      <div className="actions">
+      </div>
+      <div className="dock actions">
         <button id="share-expedition" className="pixel-btn" type="button" onClick={() => void share()}>
           {copied ? "Copied" : "Share expedition"}
         </button>
+        {shareText ? (
+          <pre className="share-text" id="share-text">
+            {shareText}
+          </pre>
+        ) : null}
       </div>
-      {shareText ? (
-        <pre className="share-text" id="share-text">
-          {shareText}
-        </pre>
-      ) : null}
-    </>
+    </div>
   );
 }

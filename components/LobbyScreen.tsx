@@ -57,78 +57,84 @@ export function LobbyScreen({
 
   return (
     <div className="lobby">
-      <PixelSprite name={digger ? "pickaxe" : "miner"} size={72} alt="" />
-      <p className="muted">
-        {digger ? "You are the Digger" : "You are the Geologist"}
-      </p>
-      <p>
-        Room{" "}
-        <span className="code" id="room-code">
-          {code}
-        </span>
-      </p>
-      <p className="hint" id="time-limits">
-        Geologist {formatSeconds(bankSeconds)} · Digger{" "}
-        {formatSeconds(digSeconds)}
-      </p>
-      {bothReady ? (
-        <p className="hint">
-          Both of you are in the shaft. The clock stays still until someone
-          clicks Start.
-        </p>
-      ) : (
-        <p className="hint">
-          Send the {inviteRole} this link. Nothing starts until both of you are
-          here and someone clicks Start.
-        </p>
-      )}
-      {!otherReady ? (
-        <>
-          <button
-            id={digger ? "copy-geologist-link" : "copy-digger-link"}
-            className="pixel-btn"
-            type="button"
-            onClick={async () => {
-              await navigator.clipboard.writeText(link);
-              setCopied(true);
-            }}
-          >
-            {copied ? "Link copied" : `Copy ${inviteRole} link`}
-          </button>
-          <p className="muted" id={digger ? "geologist-link" : "digger-link"}>
-            {link}
-          </p>
-        </>
-      ) : null}
-      {bothReady ? (
+      <div className="lobby-tools">
         <button
-          id="start-game"
-          className="pixel-btn"
+          id="open-instructions"
+          className="icon-btn"
           type="button"
-          disabled={busy}
-          onClick={onStart}
-        >
-          Start
-        </button>
-      ) : (
-        <p className="muted">Waiting for the {inviteRole}</p>
-      )}
-      <div className="lobby-actions">
-        <button
-          id="open-settings"
-          className="pixel-btn-ghost"
-          type="button"
-          onClick={openSettings}
-        >
-          Settings
-        </button>
-        <button
-          className="pixel-btn-ghost"
-          type="button"
+          aria-label="Instructions"
           onClick={() => setPanel("instructions")}
         >
-          Instructions
+          <InfoIcon />
         </button>
+        <button
+          id="open-settings"
+          className="icon-btn"
+          type="button"
+          aria-label="Settings"
+          onClick={openSettings}
+        >
+          <GearIcon />
+        </button>
+      </div>
+      <div className="stage-body">
+        <PixelSprite name={digger ? "pickaxe" : "miner"} size={72} alt="" />
+        <p className="muted">
+          {digger ? "You are the Digger" : "You are the Geologist"}
+        </p>
+        <p>
+          Room{" "}
+          <span className="code" id="room-code">
+            {code}
+          </span>
+        </p>
+        <p className="hint" id="time-limits">
+          Geologist {formatSeconds(bankSeconds)} · Digger{" "}
+          {formatSeconds(digSeconds)}
+        </p>
+        {bothReady ? (
+          <>
+            <p className="hint">Both of you are in the shaft.</p>
+          </>
+        ) : (
+          <>
+            <br />
+            <p className="hint">Send the {inviteRole} this link.</p>
+          </>
+        )}
+      </div>
+      <div className="dock">
+        {!otherReady ? (
+          <>
+            <button
+              id={digger ? "copy-geologist-link" : "copy-digger-link"}
+              className="pixel-btn"
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(link);
+                setCopied(true);
+              }}
+            >
+              {copied ? "Link copied" : `Copy ${inviteRole} link`}
+            </button>
+            <p className="muted" id={digger ? "geologist-link" : "digger-link"}>
+              {link}
+            </p>
+          </>
+        ) : null}
+        {bothReady ? (
+          <button
+            id="start-game"
+            className="pixel-btn"
+            type="button"
+            disabled={busy}
+            onClick={onStart}
+          >
+            Start
+          </button>
+        ) : (
+          <p className="muted">Waiting for the {inviteRole}...</p>
+        )}
       </div>
       {panel === "instructions" ? (
         <div className="modal-back" onClick={() => setPanel(null)}>
@@ -253,5 +259,39 @@ export function LobbyScreen({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function InfoIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+      <circle
+        cx="9"
+        cy="9"
+        r="7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <rect x="8" y="4" width="2" height="2" fill="currentColor" />
+      <rect x="8" y="8" width="2" height="6" fill="currentColor" />
+    </svg>
+  );
+}
+
+function GearIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      aria-hidden="true"
+      shapeRendering="crispEdges"
+    >
+      <path
+        fill="currentColor"
+        d="M2 3h14v2H2zM9 2h3v4H9zM2 8h14v2H2zM4 7h3v4H4zM2 13h14v2H2zM11 12h3v4h-3z"
+      />
+    </svg>
   );
 }

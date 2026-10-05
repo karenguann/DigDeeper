@@ -56,21 +56,23 @@ export function GeologistScreen({
 
   if (view.status === "digging") {
     return (
-      <>
-        <div className="panel-head">
-          <span>Geologist</span>
-          <span>Shaft {view.roundIndex + 1} / 5</span>
+      <div className="stage">
+        <div className="stage-body">
+          <div className="panel-head">
+            <span>Geologist</span>
+            <span>Shaft {view.roundIndex + 1} / 5</span>
+          </div>
+          <p className="prompt" id="prompt-text">{round?.prompt}</p>
+          <p className="hint">Guesses show up here as the digger tries them.</p>
+          <Fuse secondsLeft={secondsLeft} total={fuseTotal} />
+          <AttemptList attempts={round?.attempts ?? []} empty="No guesses yet." />
+          <ul className="chips">
+            {round?.bank?.map((entry) => (
+              <li key={entry.word}>{entry.word}</li>
+            ))}
+          </ul>
         </div>
-        <p className="prompt" id="prompt-text">{round?.prompt}</p>
-        <p className="hint">Guesses show up here as the digger tries them.</p>
-        <Fuse secondsLeft={secondsLeft} total={fuseTotal} />
-        <AttemptList attempts={round?.attempts ?? []} empty="No guesses yet." />
-        <ul className="chips">
-          {round?.bank?.map((entry) => (
-            <li key={entry.word}>{entry.word}</li>
-          ))}
-        </ul>
-      </>
+      </div>
     );
   }
 
@@ -78,23 +80,26 @@ export function GeologistScreen({
   const closed = secondsLeft === 0;
 
   return (
-    <>
-      <div className="panel-head">
-        <span>Geologist</span>
-        <span>Shaft {view.roundIndex + 1} / 5</span>
-      </div>
-      <p className="prompt" id="prompt-text">{round?.prompt}</p>
-      <p className="hint">
-        Twenty slots. Fill any of them, in any order. Blank slots are not bombs. Lock early, or the bank seals after {formatSeconds(view.bankSeconds)}.
-      </p>
-      <Fuse secondsLeft={secondsLeft} total={fuseTotal} />
-        <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (busy || closed) return;
-          onLock(words);
-        }}
-      >
+    <form
+      className="stage"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (busy || closed) return;
+        onLock(words);
+      }}
+    >
+      <div className="stage-body">
+        <div className="panel-head">
+          <span>Geologist</span>
+          <span>Shaft {view.roundIndex + 1} / 5</span>
+        </div>
+        <p className="prompt" id="prompt-text">{round?.prompt}</p>
+        <p className="hint">Twenty slots. Fill any of them, in any order.</p>
+        <p className="hint">Blank slots are not bombs.</p>
+        <p className="hint">
+          Lock early, or the bank seals after {formatSeconds(view.bankSeconds)}.
+        </p>
+        <Fuse secondsLeft={secondsLeft} total={fuseTotal} />
         <div className="bank-grid">
           {words.map((word, index) => {
             const id = `bank-${index + 1}`;
@@ -122,13 +127,13 @@ export function GeologistScreen({
             );
           })}
         </div>
-        <div className="lock-row" style={{ marginTop: 12 }}>
-          <span className="hint">{filled} / 20 buried</span>
-          <button id="lock-bank" className="pixel-btn" type="submit" disabled={busy || closed}>
-            Lock bank
-          </button>
-        </div>
-      </form>
-    </>
+      </div>
+      <div className="dock lock-row">
+        <span className="hint">{filled} / 20 buried</span>
+        <button id="lock-bank" className="pixel-btn" type="submit" disabled={busy || closed}>
+          Lock bank
+        </button>
+      </div>
+    </form>
   );
 }
