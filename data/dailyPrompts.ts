@@ -792,6 +792,7 @@ const DAYS: DailyPrompt[][] = [
             { canonical: "Taro", rarity: 76 },
             { canonical: "Pumpkin", aliases: ["Pumpkin Pie"], rarity: 78 },
             { canonical: "Tiramisu", rarity: 80 },
+            { canonical: "Blueberry Cheesecake", rarity: 81 },
             { canonical: "Eggnog", rarity: 82 },
             { canonical: "Black Sesame", rarity: 84 },
             { canonical: "Huckleberry", rarity: 86 },

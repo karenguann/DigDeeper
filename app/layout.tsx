@@ -11,6 +11,9 @@ const pixel = Press_Start_2P({
 export const metadata: Metadata = {
   title: "DIG DEEPER",
   description: "A daily semantic evasion game. Miss the geologist's bombs and dig for gems.",
+  icons: {
+    icon: "/sprites/diamond.png",
+  },
 };
 
 export const viewport: Viewport = {
